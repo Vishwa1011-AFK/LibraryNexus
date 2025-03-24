@@ -1,206 +1,146 @@
-import { Navbar } from "@/components/navbar"
+import Image from "next/image"
+import Link from "next/link"
+import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { BookOpen, Calendar, Star, Share2, Edit, Trash } from "lucide-react"
 
-export default function AdminBookDetailPage({ params }: { params: { id: string } }) {
-  // This would normally fetch the book data based on the ID
-  const book = {
-    id: params.id,
-    title: "The Alchemist",
-    author: "Paulo Coelho",
-    coverUrl: "/placeholder.svg?height=400&width=260",
-    status: "available",
-    description:
-      "Paulo Coelho's masterpiece tells the mystical story of Santiago, an Andalusian shepherd boy who yearns to travel in search of a worldly treasure. His quest will lead him to riches far different—and far more satisfying—than he ever imagined. Santiago's journey teaches us about the essential wisdom of listening to our hearts, of recognizing opportunity and learning to read the omens strewn along life's path, and, most importantly, to follow our dreams.",
-    publishedDate: "1988",
-    pages: 197,
-    genre: "Fiction, Philosophy",
-    rating: 4.5,
-    isbn: "978-0062315007",
-    publisher: "HarperOne",
-    language: "English",
-    copies: 5,
-    availableCopies: 3,
-  }
+// This would normally come from a database
+const book = {
+  id: "1",
+  title: "The Master Algorithm",
+  author: "Pedro Domingos",
+  description:
+    "Machine learning is the automation of discovery,the scientific method on steroids,that enables intelligent robots and computers to program themselves. No field of science today is more important yet more shrouded in mystery. Pedro Domingos, one of the field's leading lights, lifts the veil for the first time to give us a peek inside the learning machines that power Google, Amazon, and your smartphone",
+  shelf: "Shelf 3A Book 22",
+  isbn: "12343278",
+  totalCopies: 4,
+  availableCopies: 2,
+  pages: 352,
+  language: "English",
+  coverUrl: "/placeholder.svg?height=400&width=260",
+  issueHistory: [
+    { id: "XX341", issuedOn: "12-06-2024", userId: "1234321", submissionDate: "27-06-2024", status: "Issued" },
+    { id: "XX342", issuedOn: "10-06-2024", userId: "1234321", submissionDate: "25-06-2024", status: "Submitted" },
+    { id: "XX343", issuedOn: "15-06-2024", userId: "1234321", submissionDate: "30-06-2024", status: "Submitted" },
+    { id: "XX344", issuedOn: "09-06-2024", userId: "1234321", submissionDate: "16-06-2024", status: "Issued" },
+  ],
+}
 
+export default function AdminBookDetail({ params }: { params: { id: string } }) {
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar isAdmin={true} />
-      <main className="flex-1 container py-8">
-        <div className="grid md:grid-cols-[260px_1fr] gap-8">
-          <div>
-            <div className="book-cover h-[400px] w-[260px]">
-              <img src={book.coverUrl || "/placeholder.svg"} alt={book.title} className="object-cover w-full h-full" />
+      <SiteHeader isLoggedIn={true} />
+      <main className="flex-1 py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between mb-8 border-b border-muted pb-4">
+            <div>
+              <span className="text-lg">Name</span>
+              <span className="mx-4 text-xl">:</span>
+              <span className="text-lg">Diwakar Dubey</span>
+              <span className="ml-2 px-2 py-1 text-xs bg-orange-600 rounded text-white">Admin</span>
             </div>
-            <div className="mt-4 space-y-2">
-              <Button className="w-full bg-primary text-primary-foreground">
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Book
-              </Button>
-              <Button variant="outline" className="w-full text-destructive">
-                <Trash className="mr-2 h-4 w-4" />
-                Delete Book
-              </Button>
+            <div>
+              <span className="text-lg">Email ID</span>
+              <span className="mx-4 text-xl">:</span>
+              <span className="text-lg">dd34@gmail.com</span>
             </div>
           </div>
-          <div className="space-y-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold">{book.title}</h1>
-                <p className="text-xl text-muted-foreground">{book.author}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <Share2 className="h-4 w-4 mr-2" />
-                  Share
-                </Button>
-              </div>
+
+          <div className="mb-8">
+            <div className="flex items-center mb-2">
+              <span className="text-lg">ISBN :</span>
+              <span className="ml-4 text-lg text-primary">{book.isbn}</span>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-[300px_1fr] gap-8 mb-12">
+            <div>
+              <Image
+                src={book.coverUrl || "/placeholder.svg"}
+                alt={book.title}
+                width={300}
+                height={450}
+                className="w-full"
+              />
             </div>
 
-            <Tabs defaultValue="details">
-              <TabsList>
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="transactions">Transactions</TabsTrigger>
-                <TabsTrigger value="history">History</TabsTrigger>
-              </TabsList>
-              <TabsContent value="details" className="space-y-6 pt-4">
-                <div className="flex flex-wrap gap-4">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-muted-foreground" />
-                    <span>{book.pages} pages</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-muted-foreground" />
-                    <span>Published {book.publishedDate}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-primary" />
-                    <span>{book.rating}/5</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${book.status === "available" ? "bg-[#77ff9d]" : book.status === "borrowed" ? "bg-[#ff4d4d]" : "bg-[#d97921]"}`}
-                    />
-                    <span className="capitalize">{book.status}</span>
-                  </div>
+            <div>
+              <h1 className="text-3xl font-bold mb-1">{book.title}</h1>
+              <p className="text-muted-foreground mb-4">by {book.author}</p>
+
+              <h2 className="text-2xl font-bold mb-2">{book.shelf}</h2>
+              <p className="mb-6">
+                <span>Total co. - {book.totalCopies}</span>
+                <span className="mx-4">
+                  Available co. - <span className="text-primary">{book.availableCopies}</span>
+                </span>
+              </p>
+
+              <div className="flex gap-4 mb-8">
+                <Link href={`/admin/issue?book=${params.id}`}>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Issue to</Button>
+                </Link>
+                <Link href="/library">
+                  <Button variant="outline" className="border-muted text-muted-foreground hover:text-foreground">
+                    Go to Library
+                  </Button>
+                </Link>
+              </div>
+
+              <p className="text-muted-foreground mb-8">{book.description}</p>
+
+              <div className="flex gap-8">
+                <div className="bg-card rounded-md p-4 flex items-center justify-center flex-col">
+                  <div className="text-2xl font-bold">01</div>
+                  <div className="text-xs text-muted-foreground">352 Pages</div>
                 </div>
 
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">Description</h2>
-                  <p className="text-muted-foreground">{book.description}</p>
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">Book Details</h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="font-medium">Genre</p>
-                      <p className="text-muted-foreground">{book.genre}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Language</p>
-                      <p className="text-muted-foreground">{book.language}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">ISBN</p>
-                      <p className="text-muted-foreground">{book.isbn}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Publisher</p>
-                      <p className="text-muted-foreground">{book.publisher}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Total Copies</p>
-                      <p className="text-muted-foreground">{book.copies}</p>
-                    </div>
-                    <div>
-                      <p className="font-medium">Available Copies</p>
-                      <p className="text-muted-foreground">{book.availableCopies}</p>
-                    </div>
+                <div className="bg-card rounded-md p-4 flex items-center justify-center flex-col">
+                  <div className="text-2xl">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="lucide lucide-globe"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="2" x2="22" y1="12" y2="12" />
+                      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                    </svg>
                   </div>
+                  <div className="text-xs text-muted-foreground">English</div>
                 </div>
-              </TabsContent>
-              <TabsContent value="transactions" className="pt-4">
-                <div className="rounded-md border">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="p-3 text-left font-medium">User</th>
-                        <th className="p-3 text-left font-medium">Borrow Date</th>
-                        <th className="p-3 text-left font-medium">Due Date</th>
-                        <th className="p-3 text-left font-medium">Status</th>
-                        <th className="p-3 text-left font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="p-3">John Doe</td>
-                        <td className="p-3">2023-10-15</td>
-                        <td className="p-3">2023-11-15</td>
-                        <td className="p-3">
-                          <span className="px-2 py-1 rounded-full text-xs bg-[#77ff9d]/20 text-[#009a2b]">Active</span>
-                        </td>
-                        <td className="p-3">
-                          <Button variant="outline" size="sm">
-                            Mark Returned
-                          </Button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3">Jane Smith</td>
-                        <td className="p-3">2023-09-20</td>
-                        <td className="p-3">2023-10-20</td>
-                        <td className="p-3">
-                          <span className="px-2 py-1 rounded-full text-xs bg-[#ff8181]/20 text-[#c22424]">Overdue</span>
-                        </td>
-                        <td className="p-3">
-                          <Button variant="outline" size="sm">
-                            Mark Returned
-                          </Button>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Details</h2>
+
+            <div className="overflow-hidden rounded-lg border border-muted">
+              <div className="grid grid-cols-5 bg-card p-4 font-medium">
+                <div>Book Id</div>
+                <div>Last Issued on</div>
+                <div>User Id</div>
+                <div>Date of Submission</div>
+                <div>Status</div>
+              </div>
+
+              {book.issueHistory.map((issue) => (
+                <div key={issue.id} className="grid grid-cols-5 border-t border-muted p-4">
+                  <div className="text-primary">{issue.id}</div>
+                  <div>{issue.issuedOn}</div>
+                  <div>{issue.userId}</div>
+                  <div>{issue.submissionDate}</div>
+                  <div className={issue.status === "Issued" ? "text-red-500" : "text-green-500"}>{issue.status}</div>
                 </div>
-              </TabsContent>
-              <TabsContent value="history" className="pt-4">
-                <div className="rounded-md border">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="p-3 text-left font-medium">User</th>
-                        <th className="p-3 text-left font-medium">Borrow Date</th>
-                        <th className="p-3 text-left font-medium">Return Date</th>
-                        <th className="p-3 text-left font-medium">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="p-3">Michael Johnson</td>
-                        <td className="p-3">2023-08-10</td>
-                        <td className="p-3">2023-09-10</td>
-                        <td className="p-3">
-                          <span className="px-2 py-1 rounded-full text-xs bg-[#e1e1e1]/20 text-[#9a9a9a]">
-                            Returned
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-3">Sarah Williams</td>
-                        <td className="p-3">2023-07-05</td>
-                        <td className="p-3">2023-08-05</td>
-                        <td className="p-3">
-                          <span className="px-2 py-1 rounded-full text-xs bg-[#e1e1e1]/20 text-[#9a9a9a]">
-                            Returned
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-            </Tabs>
+              ))}
+            </div>
           </div>
         </div>
       </main>

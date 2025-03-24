@@ -1,208 +1,124 @@
-"use client"
-
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Navbar } from "@/components/layout/navbar"
-import { BookCard } from "@/components/books/book-card"
+import Link from "next/link"
+import Image from "next/image"
+import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Book } from "@/types"
+import { Card, CardContent, CardFooter } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 // Sample book data
-const sampleBooks = [
+const books = [
   {
-    id: "1",
-    title: "The Alchemist",
-    author: "Paulo Coelho",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "available" as const,
+    id: 1,
+    title: "The Silent Patient",
+    author: "Alex Michaelides",
+    category: "Thriller",
+    rating: 4.5,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "2",
+    id: 2,
     title: "Atomic Habits",
     author: "James Clear",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "borrowed" as const,
+    category: "Self-Help",
+    rating: 4.8,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "3",
-    title: "Sapiens",
-    author: "Yuval Noah Harari",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "available" as const,
+    id: 3,
+    title: "The Midnight Library",
+    author: "Matt Haig",
+    category: "Fiction",
+    rating: 4.2,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "4",
-    title: "The Great Gatsby",
-    author: "F. Scott Fitzgerald",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "reserved" as const,
+    id: 4,
+    title: "Project Hail Mary",
+    author: "Andy Weir",
+    category: "Sci-Fi",
+    rating: 4.7,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "5",
-    title: "To Kill a Mockingbird",
-    author: "Harper Lee",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "available" as const,
+    id: 5,
+    title: "The Four Winds",
+    author: "Kristin Hannah",
+    category: "Historical Fiction",
+    rating: 4.4,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "6",
-    title: "1984",
-    author: "George Orwell",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "borrowed" as const,
+    id: 6,
+    title: "The Vanishing Half",
+    author: "Brit Bennett",
+    category: "Fiction",
+    rating: 4.3,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "7",
-    title: "The Hobbit",
-    author: "J.R.R. Tolkien",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "available" as const,
+    id: 7,
+    title: "Klara and the Sun",
+    author: "Kazuo Ishiguro",
+    category: "Sci-Fi",
+    rating: 4.1,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
   {
-    id: "8",
-    title: "Pride and Prejudice",
-    author: "Jane Austen",
-    coverUrl: "/placeholder.svg?height=240&width=160",
-    status: "reserved" as const,
+    id: 8,
+    title: "The Invisible Life of Addie LaRue",
+    author: "V.E. Schwab",
+    category: "Fantasy",
+    rating: 4.6,
+    coverUrl: "/placeholder.svg?height=250&width=180",
   },
 ]
 
-// This would be replaced with a real API call
-const getBooks = async (filters: any): Promise<Book[]> => {
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
-
-  let filteredBooks = [...sampleBooks]
-
-  // Apply filters
-  if (filters.category && filters.category !== "all") {
-    // In a real app, this would filter by category
-  }
-
-  if (filters.status && filters.status !== "all") {
-    filteredBooks = filteredBooks.filter((book) => book.status === filters.status)
-  }
-
-  // Apply sorting
-  if (filters.sortBy === "title-asc") {
-    filteredBooks.sort((a, b) => a.title.localeCompare(b.title))
-  } else if (filters.sortBy === "title-desc") {
-    filteredBooks.sort((a, b) => b.title.localeCompare(a.title))
-  }
-
-  return filteredBooks
-}
-
 export default function BooksPage() {
-  const [category, setCategory] = useState("all")
-  const [status, setStatus] = useState("all")
-  const [year, setYear] = useState("all")
-  const [sortBy, setSortBy] = useState("newest")
-
-  const { data: books, isLoading } = useQuery<Book[]>({
-    queryKey: ["books", { category, status, year, sortBy }],
-    queryFn: () => getBooks({ category, status, year, sortBy }),
-  })
-
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1 container py-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className="w-full md:w-64 space-y-4">
+      <SiteHeader />
+      <main className="flex-1 p-4 md:p-6">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
             <div>
-              <h2 className="text-lg font-semibold mb-2">Filters</h2>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      <SelectItem value="fiction">Fiction</SelectItem>
-                      <SelectItem value="non-fiction">Non-Fiction</SelectItem>
-                      <SelectItem value="science">Science</SelectItem>
-                      <SelectItem value="history">History</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="available">Available</SelectItem>
-                      <SelectItem value="borrowed">Borrowed</SelectItem>
-                      <SelectItem value="reserved">Reserved</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="year">Publication Year</Label>
-                  <Select value={year} onValueChange={setYear}>
-                    <SelectTrigger id="year">
-                      <SelectValue placeholder="Select year" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Years</SelectItem>
-                      <SelectItem value="2023">2023</SelectItem>
-                      <SelectItem value="2022">2022</SelectItem>
-                      <SelectItem value="2021">2021</SelectItem>
-                      <SelectItem value="2020">2020</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button className="w-full">Apply Filters</Button>
-              </div>
+              <h1 className="text-3xl font-bold mb-2">Books</h1>
+              <p className="text-muted-foreground">Browse our collection of digital books</p>
+            </div>
+            <div className="flex gap-2 mt-4 md:mt-0">
+              <Button variant="outline" size="sm">
+                Filter
+              </Button>
+              <Button variant="outline" size="sm">
+                Sort
+              </Button>
             </div>
           </div>
-          <div className="flex-1 space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold">Browse Books</h1>
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                  <SelectItem value="title-asc">Title (A-Z)</SelectItem>
-                  <SelectItem value="title-desc">Title (Z-A)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
-            {isLoading ? (
-              <div className="book-grid">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="book-cover skeleton"></div>
-                    <div className="h-4 skeleton rounded w-3/4"></div>
-                    <div className="h-3 skeleton rounded w-1/2"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="book-grid">
-                {books?.map((book) => (
-                  <BookCard
-                    key={book.id}
-                    id={book.id}
-                    title={book.title}
-                    author={book.author}
-                    coverUrl={book.coverUrl}
-                    status={book.status as "available" | "borrowed" | "reserved"}
-                  />
-                ))}
-              </div>
-            )}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6">
+            {books.map((book) => (
+              <Link key={book.id} href={`/books/${book.id}`}>
+                <Card className="h-full overflow-hidden bg-muted hover:bg-muted/80 transition-colors border-muted">
+                  <CardContent className="p-3">
+                    <div className="aspect-[2/3] relative mb-3">
+                      <Image
+                        src={book.coverUrl || "/placeholder.svg"}
+                        alt={book.title}
+                        fill
+                        className="object-cover rounded-md"
+                      />
+                    </div>
+                    <h3 className="font-medium line-clamp-1">{book.title}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-1">{book.author}</p>
+                  </CardContent>
+                  <CardFooter className="p-3 pt-0 flex justify-between items-center">
+                    <Badge variant="outline" className="bg-secondary text-xs">
+                      {book.category}
+                    </Badge>
+                    <div className="text-xs text-muted-foreground">★ {book.rating}</div>
+                  </CardFooter>
+                </Card>
+              </Link>
+            ))}
           </div>
         </div>
       </main>

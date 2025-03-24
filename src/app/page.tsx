@@ -1,57 +1,76 @@
-import { Navbar } from "@/components/layout/navbar"
-import { Button } from "@/components/ui/button"
-import { FeaturedBooks } from "@/components/books/featured-books"
 import Link from "next/link"
 import Image from "next/image"
+import { SiteHeader } from "@/components/site-header"
+import { Button } from "@/components/ui/button"
+
+// Sample book covers
+const bookCovers = [
+  {
+    title: "Systemic Risk",
+    url: "/placeholder.svg?height=300&width=200",
+  },
+  {
+    title: "Data Structure & Algorithms",
+    url: "/placeholder.svg?height=300&width=200",
+  },
+  {
+    title: "Codeless Data Structures and Algorithms",
+    url: "/placeholder.svg?height=300&width=200",
+  },
+  {
+    title: "The Master Algorithm",
+    url: "/placeholder.svg?height=300&width=200",
+  },
+  {
+    title: "The Bible of Algorithms & Data Structures",
+    url: "/placeholder.svg?height=300&width=200",
+  },
+  {
+    title: "Analysis of Algorithms",
+    url: "/placeholder.svg?height=300&width=200",
+  },
+]
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4">
-                <div className="space-y-2">
-                  <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
-                    Unlock your next book adventure with Nexus
-                  </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Discover, borrow, and manage your reading list with our digital library system.
-                  </p>
-                </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                  <Button size="lg" className="bg-primary text-primary-foreground" asChild>
-                    <Link href="/books">Browse Books</Link>
+      <SiteHeader />
+      <main className="flex-1 py-12">
+        <div className="container px-4 md:px-6">
+          <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
+            <div className="space-y-4">
+              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">
+                Unlock your institute&apos;s LRC digitally with Nexus
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Explore institute&apos;s Books, journals, and research papers from the comfort of your hostel with 24/7
+                access digitally
+              </p>
+              <div className="pt-4">
+                <Link href="/signup">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-md">
+                    Get Started <span className="ml-2">→</span>
                   </Button>
-                  <Button size="lg" variant="outline">
-                    Learn More
-                  </Button>
-                </div>
+                </Link>
               </div>
-              <div className="flex items-center justify-center">
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="book-cover">
-                      <Image
-                        src={`/placeholder.svg?height=240&width=160`}
-                        alt="Book cover"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
+            </div>
+            <div className="flex items-center justify-center">
+              <div className="grid grid-cols-3 gap-4 relative">
+                {bookCovers.map((book, index) => (
+                  <div key={index} className={`relative ${index % 3 === 0 ? "mt-8" : index % 3 === 2 ? "mt-4" : ""}`}>
+                    <Image
+                      src={book.url || "/placeholder.svg"}
+                      alt={book.title}
+                      width={140}
+                      height={200}
+                      className="rounded-md shadow-lg"
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </section>
-        <section className="w-full py-12 md:py-24 lg:py-32">
-          <div className="container px-4 md:px-6">
-            <FeaturedBooks />
-          </div>
-        </section>
+        </div>
       </main>
     </div>
   )
