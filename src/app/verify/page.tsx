@@ -61,18 +61,16 @@ export default function VerifyAccount() {
           <div className="flex justify-center gap-2 mb-8">
             {verificationCode.map((digit, index) => (
               <Input
-              key={index}
-              ref={(el) => {
-                inputRefs.current[index] = el
-              }}
-              type="text"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleInputChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              className="w-14 h-14 text-center text-xl bg-muted/50 border-muted"
-            />            
+                key={index}
+                ref={(el) => (inputRefs.current[index] = el)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleInputChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyDown(index, e)}
+                className="w-14 h-14 text-center text-xl bg-muted/50 border-muted"
+              />
             ))}
           </div>
 

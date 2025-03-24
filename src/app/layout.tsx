@@ -10,6 +10,7 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Nexus Library",
   description: "Digital library management system",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -28,3 +29,6 @@ export default function RootLayout({
   )
 }
 
+
+
+import './globals.css'
