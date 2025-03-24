@@ -1,8 +1,9 @@
-"use client";
+"use client"
 
-import { useQuery } from "@tanstack/react-query";
-import { BookCard } from "./book-card";
-import type { Book, BookStatus } from "@/types"; // Import from central types
+import { useQuery } from "@tanstack/react-query"
+import { BookCard } from "./book-card"
+import type { Book } from "@/types"
+import type { BookStatus } from "@/types"
 
 // Sample book data
 const sampleBooks = [
@@ -34,16 +35,17 @@ const sampleBooks = [
     coverUrl: "/placeholder.svg?height=240&width=160",
     status: "reserved" as const,
   },
-];
+]
 
 // This would be replaced with a real API call
 const getFeaturedBooks = async (): Promise<Book[]> => {
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return sampleBooks;
-};
+  // Simulate API delay
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  return sampleBooks
+}
 
 interface FeaturedBooksProps {
-  isAdmin?: boolean;
+  isAdmin?: boolean
 }
 
 export function FeaturedBooks({ isAdmin = false }: FeaturedBooksProps) {
@@ -54,7 +56,7 @@ export function FeaturedBooks({ isAdmin = false }: FeaturedBooksProps) {
   } = useQuery<Book[]>({
     queryKey: ["featuredBooks"],
     queryFn: getFeaturedBooks,
-  });
+  })
 
   if (isLoading) {
     return (
@@ -70,11 +72,11 @@ export function FeaturedBooks({ isAdmin = false }: FeaturedBooksProps) {
           ))}
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
-    return <div className="text-red-500">Error loading featured books</div>;
+    return <div className="text-red-500">Error loading featured books</div>
   }
 
   return (
@@ -94,5 +96,6 @@ export function FeaturedBooks({ isAdmin = false }: FeaturedBooksProps) {
         ))}
       </div>
     </div>
-  );
+  )
 }
+
