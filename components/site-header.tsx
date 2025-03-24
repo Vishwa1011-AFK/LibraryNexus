@@ -1,87 +1,32 @@
-"use client"
+import { cn } from "@/lib/utils"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { useAuth } from "@/context/auth-context"
+interface UserInfoHeaderProps {
+  name: string
+  email: string
+  isAdmin?: boolean
+  className?: string
+}
 
-export function SiteHeader() {
-  const pathname = usePathname()
-  const { user, logout } = useAuth()
-
+export function UserInfoHeader({ name, email, isAdmin = false, className }: UserInfoHeaderProps) {
   return (
-    <header className="w-full py-4 bg-background">
-      <div className="container flex items-center justify-between">
-        <Link href="/" className="text-primary font-bold text-2xl">
-          Nexus
-        </Link>
-
-        <div className="relative w-full max-w-md mx-4">
-          <div className="relative">
-            <Input
-              type="search"
-              placeholder="Search Books"
-              className="w-full bg-muted/50 border-muted pl-3 pr-10 py-2 rounded-md"
-            />
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          </div>
-        </div>
-
-        <div className="flex items-center space-x-6">
-          {user ? (
-            <>
-              <Link
-                href="/account"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname.startsWith("/account") ? "text-primary underline" : "text-muted-foreground"
-                }`}
-              >
-                My account
-              </Link>
-              <Link
-                href="/library"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/library" ? "text-primary underline" : "text-muted-foreground"
-                }`}
-              >
-                Library
-              </Link>
-              <Link
-                href="/wishlist"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/wishlist" ? "text-primary underline" : "text-muted-foreground"
-                }`}
-              >
-                Wishlist
-              </Link>
-              <button onClick={logout} className="text-sm font-medium text-muted-foreground hover:text-primary">
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/signin"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/signin" ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/signup"
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === "/signup" ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Sign Up
-              </Link>
-            </>
-          )}
-        </div>
+    <div
+      className={cn(
+        "flex flex-col md:flex-row md:items-center md:justify-between mb-8 border-b border-muted pb-4",
+        className,
+      )}
+    >
+      <div className="flex items-center mb-2 md:mb-0">
+        <span className="text-lg">Name</span>
+        <span className="mx-4 text-xl">:</span>
+        <span className="text-lg">{name}</span>
+        {isAdmin && <span className="ml-2 px-2 py-1 text-xs bg-orange-600 rounded text-white">Admin</span>}
       </div>
-    </header>
+      <div className="flex items-center">
+        <span className="text-lg">Email ID</span>
+        <span className="mx-4 text-xl">:</span>
+        <span className="text-lg">{email}</span>
+      </div>
+    </div>
   )
 }
 
