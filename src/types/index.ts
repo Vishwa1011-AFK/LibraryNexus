@@ -1,4 +1,4 @@
-export type BookStatus = "available" | "borrowed" | "reserved" | "overdue" | "returned"
+export type BookStatus = "available" | "borrowed" | "reserved" | "overdue" | "returned";
 export type UserRole = "admin" | "member"
 export type UserStatus = "active" | "inactive"
 export type TransactionStatus = "active" | "overdue" | "returned" | "pending"
