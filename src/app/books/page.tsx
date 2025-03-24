@@ -76,7 +76,7 @@ const books = [
 export default function BooksPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+      <SiteHeader isLoggedIn={true} />
       <main className="flex-1 p-4 md:p-6">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
