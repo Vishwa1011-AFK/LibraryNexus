@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { Menu, BookOpen, User, LogOut, BookMarked } from "lucide-react"
+import { Menu, BookOpen, User, LogOut, BookMarked, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -22,7 +22,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
   const navItems = [
     { name: "Library", href: "/library", icon: <BookOpen className="h-5 w-5" /> },
     { name: "Books", href: "/books", icon: <BookMarked className="h-5 w-5" /> },
-    { name: "Wishlist", href: "/wishlist", icon: <BookMarked className="h-5 w-5" /> },
+    { name: "Wishlist", href: "/wishlist", icon: <Heart className="h-5 w-5" /> },
     { name: "Account", href: "/account", icon: <User className="h-5 w-5" /> },
   ]
 

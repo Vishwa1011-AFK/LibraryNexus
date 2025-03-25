@@ -29,21 +29,11 @@ export function BookGrid({
   columns = {
     sm: 2,
     md: 3,
-    lg: 4,
+    lg: 5,
   },
 }: BookGridProps) {
-  const getColumnsClass = () => {
-    const classes = []
-
-    if (columns.sm) classes.push(`grid-cols-${columns.sm}`)
-    if (columns.md) classes.push(`md:grid-cols-${columns.md}`)
-    if (columns.lg) classes.push(`lg:grid-cols-${columns.lg}`)
-
-    return classes.join(" ")
-  }
-
   return (
-    <div className={cn(`grid ${getColumnsClass()} gap-4 md:gap-6`, className)}>
+    <div className={cn(`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6`, className)}>
       {books.map((book) => (
         <BookCard
           key={book.id}

@@ -10,19 +10,19 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 142.1 76.2% 36.3%;
-    --primary-foreground: 355.7 100% 97.3%;
-    --secondary: 240 4.8% 95.9%;
+    --primary: 58 84% 59%;
+    --primary-foreground: 60 10% 10%;
+    --secondary: 60 10% 96%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
+    --accent: 60 10% 96%;
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 142.1 76.2% 36.3%;
+    --ring: 58 84% 59%;
     --radius: 0.5rem;
   }
 
@@ -33,19 +33,19 @@
     --card-foreground: 0 0% 100%;
     --popover: 222 10% 12%;
     --popover-foreground: 0 0% 100%;
-    --primary: 142.1 70.6% 45.3%;
-    --primary-foreground: 144.9 80.4% 10%;
+    --primary: 58 84% 59%;
+    --primary-foreground: 60 10% 10%;
     --secondary: 222 10% 12%;
     --secondary-foreground: 0 0% 88%;
     --muted: 222 10% 12%;
     --muted-foreground: 0 0% 60%;
-    --accent: 142.1 70.6% 45.3%;
+    --accent: 58 84% 59%;
     --accent-foreground: 220 10% 4%;
     --destructive: 350 80% 37%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 10% 18%;
     --input: 222 10% 12%;
-    --ring: 142.1 70.6% 45.3%;
+    --ring: 58 84% 59%;
   }
 }
 
@@ -76,5 +76,28 @@
   to {
     opacity: 1;
   }
+}
+
+/* Gradient backgrounds */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Checkbox and form input styling */
+input[type="checkbox"] {
+  @apply text-primary border-primary/50 focus:ring-primary/30;
+  @apply bg-background;
+}
+
+input[type="checkbox"]:checked {
+  @apply bg-primary border-primary;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select,
+textarea {
+  @apply bg-background border-input;
 }
 

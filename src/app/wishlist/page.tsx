@@ -1,8 +1,13 @@
+"use client"
+
+import { useState } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Trash2 } from "lucide-react"
 import { UserInfoHeader } from "@/components/user-info-header"
-import { DataTable } from "@/components/ui/data-table"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 
 // Sample wishlist data
 const wishlistData = [
@@ -53,89 +58,77 @@ export default function WishlistPage() {
     email: "dd34@gmail.com",
   }
 
-  const borrowedBooksColumns = [
-    {
-      key: "title",
-      header: "Book",
-      cell: (book: (typeof borrowedBooks)[0]) => (
-        <div>
-          <span className="block">{book.title}</span>
-          <span className="block text-xs text-primary">{book.isbn}</span>
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      key: "dateOfIssue",
-      header: "Date of Issue",
-      cell: (book: (typeof borrowedBooks)[0]) => book.dateOfIssue,
-      sortable: true,
-    },
-    {
-      key: "dateOfSubmission",
-      header: "Date of Submission",
-      cell: (book: (typeof borrowedBooks)[0]) => book.dateOfSubmission,
-      sortable: true,
-    },
-  ]
+  const [searchQuery, setSearchQuery] = useState("")
 
-  const wishlistColumns = [
-    {
-      key: "title",
-      header: "Book",
-      cell: (book: (typeof wishlistData)[0]) => (
-        <div>
-          <span className="block">{book.title}</span>
-          <span className="block text-xs text-primary">{book.isbn}</span>
-        </div>
-      ),
-      sortable: true,
-    },
-    {
-      key: "author",
-      header: "Author",
-      cell: (book: (typeof wishlistData)[0]) => book.author,
-      sortable: true,
-    },
-    {
-      key: "actions",
-      header: "",
-      cell: (book: (typeof wishlistData)[0]) => (
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary hover:text-destructive"
-            aria-label={`Remove ${book.title} from wishlist`}
-          >
-            <Trash2 className="h-5 w-5" />
-          </Button>
-        </div>
-      ),
-    },
-  ]
+  // Filter function for search
+  const filteredWishlist = wishlistData.filter(
+    (book) =>
+      book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      book.isbn.includes(searchQuery),
+  )
+
+  const filteredBorrowedBooks = borrowedBooks.filter(
+    (book) => book.title.toLowerCase().includes(searchQuery.toLowerCase()) || book.isbn.includes(searchQuery),
+  )
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader isLoggedIn={true}/>
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
+      <SiteHeader isLoggedIn={true} />
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
           <UserInfoHeader name={userData.name} email={userData.email} />
 
           <div className="space-y-10">
+            <div className="relative max-w-sm mb-6">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search books..."
+                className="pl-10 border-input bg-background"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+
             <div>
               <h2 className="text-2xl font-bold mb-4 flex items-center">
                 My Books
                 <span className="ml-2 text-primary">({borrowedBooks.length})</span>
               </h2>
 
-              <DataTable
-                data={borrowedBooks}
-                columns={borrowedBooksColumns}
-                pageSize={5}
-                searchable
-                searchKeys={["title", "isbn"]}
-              />
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Book</TableHead>
+                      <TableHead>Date of Issue</TableHead>
+                      <TableHead>Date of Submission</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBorrowedBooks.length > 0 ? (
+                      filteredBorrowedBooks.map((book) => (
+                        <TableRow key={book.id}>
+                          <TableCell>
+                            <div>
+                              <span className="block">{book.title}</span>
+                              <span className="block text-xs text-primary">{book.isbn}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{book.dateOfIssue}</TableCell>
+                          <TableCell>{book.dateOfSubmission}</TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                          No results found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
             <div>
@@ -144,13 +137,48 @@ export default function WishlistPage() {
                 <span className="ml-2 text-primary">({wishlistData.length})</span>
               </h2>
 
-              <DataTable
-                data={wishlistData}
-                columns={wishlistColumns}
-                pageSize={5}
-                searchable
-                searchKeys={["title", "isbn", "author"]}
-              />
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Book</TableHead>
+                      <TableHead>Author</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredWishlist.length > 0 ? (
+                      filteredWishlist.map((book) => (
+                        <TableRow key={book.id}>
+                          <TableCell>
+                            <div>
+                              <span className="block">{book.title}</span>
+                              <span className="block text-xs text-primary">{book.isbn}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{book.author}</TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-primary hover:text-destructive"
+                              aria-label={`Remove ${book.title} from wishlist`}
+                            >
+                              <Trash2 className="h-5 w-5" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={3} className="h-24 text-center">
+                          No results found.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           </div>
         </div>

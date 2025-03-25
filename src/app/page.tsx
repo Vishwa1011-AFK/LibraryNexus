@@ -2,6 +2,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
+import { ArrowRight } from "lucide-react"
 
 // Sample book covers
 const bookCovers = [
@@ -33,7 +34,7 @@ const bookCovers = [
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
       <SiteHeader />
       <main className="flex-1 py-12">
         <div className="container px-4 md:px-6">
@@ -48,8 +49,8 @@ export default function Home() {
               </p>
               <div className="pt-4">
                 <Link href="/signup">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-md">
-                    Get Started <span className="ml-2">→</span>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-6 text-lg rounded-md inline-flex items-center">
+                    Get Started <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               </div>

@@ -69,7 +69,7 @@ export function BookCard({
             <div
               className={cn(
                 "text-center py-1 px-2 rounded-md text-xs w-full font-medium",
-                available ? "bg-green-900/30 text-green-500" : "bg-red-900/30 text-red-500",
+                available ? "bg-primary/20 text-primary" : "bg-destructive/20 text-destructive",
               )}
             >
               {available ? "Available" : "Unavailable"}

@@ -1,3 +1,6 @@
+"use client"
+
+import { useState } from "react"
 import { SiteHeader } from "@/components/site-header"
 import { UserInfoHeader } from "@/components/user-info-header"
 import { BookGrid } from "@/components/book-grid"
@@ -103,6 +106,9 @@ const books = [
 
 export default function LibraryPage() {
   const isAdmin = true // This would normally be determined by authentication
+  const [searchQuery, setSearchQuery] = useState("")
+  const [category, setCategory] = useState("all")
+  const [sortBy, setSortBy] = useState("newest")
 
   // In a real app, this would come from your auth context
   const userData = {
@@ -115,7 +121,7 @@ export default function LibraryPage() {
   const totalPages = 3
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
       <SiteHeader isLoggedIn={true} />
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
@@ -132,12 +138,17 @@ export default function LibraryPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input placeholder="Search books..." className="pl-10" />
+                <Input
+                  placeholder="Search books..."
+                  className="pl-10 border-input bg-background"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
 
               <div className="flex gap-2">
-                <Select defaultValue="all">
-                  <SelectTrigger className="w-[180px]">
+                <Select defaultValue="all" value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="w-[180px] border-input bg-background">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -148,8 +159,8 @@ export default function LibraryPage() {
                   </SelectContent>
                 </Select>
 
-                <Select defaultValue="newest">
-                  <SelectTrigger className="w-[150px]">
+                <Select defaultValue="newest" value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[150px] border-input bg-background">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -169,7 +180,7 @@ export default function LibraryPage() {
             columns={{
               sm: 2,
               md: 3,
-              lg: 4,
+              lg: 5,
             }}
             className="mb-8"
           />
