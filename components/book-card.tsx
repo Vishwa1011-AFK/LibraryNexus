@@ -46,6 +46,7 @@ export function BookCard({
               fill
               className="object-cover transition-transform duration-300 hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              style={{ transition: 'opacity 0.3s ease-in-out' }}
             />
           </div>
           <h3 className="font-medium line-clamp-1 text-foreground" title={title}>
@@ -80,4 +81,3 @@ export function BookCard({
     </Link>
   )
 }
-
