@@ -33,19 +33,19 @@
     --card-foreground: 0 0% 100%;
     --popover: 222 10% 12%;
     --popover-foreground: 0 0% 100%;
-    --primary: 65 75% 60%;
-    --primary-foreground: 220 10% 4%;
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 144.9 80.4% 10%;
     --secondary: 222 10% 12%;
     --secondary-foreground: 0 0% 88%;
     --muted: 222 10% 12%;
     --muted-foreground: 0 0% 60%;
-    --accent: 65 75% 60%;
+    --accent: 142.1 70.6% 45.3%;
     --accent-foreground: 220 10% 4%;
     --destructive: 350 80% 37%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 10% 18%;
     --input: 222 10% 12%;
-    --ring: 65 75% 60%;
+    --ring: 142.1 70.6% 45.3%;
   }
 }
 
@@ -55,6 +55,26 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Custom animations */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

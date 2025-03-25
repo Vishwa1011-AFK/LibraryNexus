@@ -50,7 +50,7 @@ export function FormField({
           onChange={onChange}
           placeholder={placeholder}
           className={cn(
-            "w-full bg-muted/50 border-muted",
+            "w-full bg-background border-input focus-visible:ring-1 focus-visible:ring-primary",
             error && "border-destructive focus-visible:ring-destructive",
             inputClassName,
           )}

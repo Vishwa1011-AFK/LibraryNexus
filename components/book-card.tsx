@@ -30,22 +30,25 @@ export function BookCard({
   return (
     <Link
       href={isAdmin ? `/admin/books/${id}` : `/books/${id}`}
-      className="block transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      className="block transition-transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
     >
       <Card
-        className={cn("h-full overflow-hidden bg-card border-muted hover:bg-muted/80 transition-colors", className)}
+        className={cn(
+          "h-full overflow-hidden border-border hover:border-primary/50 transition-colors duration-200",
+          className,
+        )}
       >
         <CardContent className="p-3">
-          <div className="aspect-[2/3] relative mb-3 overflow-hidden rounded-md">
+          <div className="aspect-[2/3] relative mb-3 overflow-hidden rounded-md shadow-sm">
             <Image
               src={coverUrl || "/placeholder.svg"}
               alt={title}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-300 hover:scale-105"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
-          <h3 className="font-medium line-clamp-1" title={title}>
+          <h3 className="font-medium line-clamp-1 text-foreground" title={title}>
             {title}
           </h3>
           <p className="text-sm text-muted-foreground line-clamp-1" title={author}>
@@ -60,12 +63,12 @@ export function BookCard({
             </Badge>
           )}
 
-          {rating !== undefined && <div className="text-xs text-muted-foreground">★ {rating}</div>}
+          {rating !== undefined && <div className="text-xs text-amber-500">★ {rating}</div>}
 
           {available !== undefined && (
             <div
               className={cn(
-                "text-center py-1 px-2 rounded-md text-xs w-full",
+                "text-center py-1 px-2 rounded-md text-xs w-full font-medium",
                 available ? "bg-green-900/30 text-green-500" : "bg-red-900/30 text-red-500",
               )}
             >

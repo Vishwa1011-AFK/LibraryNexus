@@ -1,6 +1,8 @@
 import { SiteHeader } from "@/components/site-header"
 import { UserInfoHeader } from "@/components/user-info-header"
 import { BookGrid } from "@/components/book-grid"
+import { Input } from "@/components/ui/input"
+import { Search } from "lucide-react"
 import {
   Pagination,
   PaginationContent,
@@ -9,6 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Sample books data
 const books = [
@@ -113,28 +116,50 @@ export default function LibraryPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader isLoggedIn={true}/>
+      <SiteHeader isLoggedIn={true} />
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
           <UserInfoHeader name={userData.name} email={userData.email} isAdmin={isAdmin} />
 
-          <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold">Books</h1>
+          <div className="mb-8 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h1 className="text-2xl font-bold flex items-center gap-2">
+                Books
+                <span className="text-sm font-normal text-muted-foreground">({books.length} items)</span>
+              </h1>
+            </div>
 
-            <div className="flex gap-2">
-              <select className="bg-card text-sm rounded-md border border-input px-3 py-2">
-                <option value="">All Categories</option>
-                <option value="programming">Programming</option>
-                <option value="algorithms">Algorithms</option>
-                <option value="data-science">Data Science</option>
-              </select>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search books..." className="pl-10" />
+              </div>
 
-              <select className="bg-card text-sm rounded-md border border-input px-3 py-2">
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="a-z">A-Z</option>
-                <option value="z-a">Z-A</option>
-              </select>
+              <div className="flex gap-2">
+                <Select defaultValue="all">
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    <SelectItem value="programming">Programming</SelectItem>
+                    <SelectItem value="algorithms">Algorithms</SelectItem>
+                    <SelectItem value="data-science">Data Science</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select defaultValue="newest">
+                  <SelectTrigger className="w-[150px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest</SelectItem>
+                    <SelectItem value="oldest">Oldest</SelectItem>
+                    <SelectItem value="a-z">A-Z</SelectItem>
+                    <SelectItem value="z-a">Z-A</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -162,15 +187,11 @@ export default function LibraryPage() {
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationLink href="/library?page=2" >
-                  2
-                </PaginationLink>
+                <PaginationLink href="/library?page=2">2</PaginationLink>
               </PaginationItem>
 
               <PaginationItem>
-                <PaginationLink href="/library?page=3" >
-                  3
-                </PaginationLink>
+                <PaginationLink href="/library?page=3">3</PaginationLink>
               </PaginationItem>
 
               <PaginationItem>

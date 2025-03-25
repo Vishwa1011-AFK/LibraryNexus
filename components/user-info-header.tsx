@@ -1,3 +1,4 @@
+import { User, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface UserInfoHeaderProps {
@@ -11,20 +12,24 @@ export function UserInfoHeader({ name, email, isAdmin = false, className }: User
   return (
     <div
       className={cn(
-        "flex flex-col md:flex-row md:items-center md:justify-between mb-8 border-b border-muted pb-4",
+        "flex flex-col md:flex-row md:items-center md:justify-between mb-8 border-b border-border pb-4",
         className,
       )}
     >
-      <div className="flex items-center mb-2 md:mb-0">
-        <span className="text-lg">Name</span>
-        <span className="mx-4 text-xl">:</span>
-        <span className="text-lg">{name}</span>
-        {isAdmin && <span className="ml-2 px-2 py-1 text-xs bg-orange-600 rounded text-white">Admin</span>}
+      <div className="flex items-center mb-2 md:mb-0 gap-2">
+        <User className="h-5 w-5 text-primary" />
+        <span className="text-muted-foreground">Name:</span>
+        <span className="text-foreground font-medium">{name}</span>
+        {isAdmin && (
+          <span className="ml-2 px-2 py-0.5 text-xs bg-amber-600/20 text-amber-500 rounded-full border border-amber-600/30 font-medium">
+            Admin
+          </span>
+        )}
       </div>
-      <div className="flex items-center">
-        <span className="text-lg">Email ID</span>
-        <span className="mx-4 text-xl">:</span>
-        <span className="text-lg">{email}</span>
+      <div className="flex items-center gap-2">
+        <Mail className="h-5 w-5 text-primary" />
+        <span className="text-muted-foreground">Email:</span>
+        <span className="text-foreground font-medium">{email}</span>
       </div>
     </div>
   )

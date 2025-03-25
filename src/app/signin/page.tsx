@@ -5,14 +5,16 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Grid3X3, Clock, Search } from "lucide-react"
+import { FormField } from "@/components/ui/form-field"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Grid3X3, Clock, Search, Mail, Lock } from "lucide-react"
 import { useAuth } from "@/context/auth-context"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [userType, setUserType] = useState("User")
+  const [userType, setUserType] = useState("user")
   const router = useRouter()
   const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
@@ -38,12 +40,13 @@ export default function SignIn() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="flex-1 flex">
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-2 gap-12">
+      <main className="flex-1 flex items-center justify-center py-12">
+        <div className="container px-4">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 items-start max-w-6xl mx-auto">
             <div className="space-y-8">
               <div>
-                <h1 className="text-3xl font-bold mb-6">Sign Up to access 3000+ books from institute&apos;s LRC</h1>
+                <h1 className="text-3xl font-bold mb-4">Sign in to access 3000+ books from institute's LRC</h1>
+                <p className="text-muted-foreground">Explore our digital library with your account credentials</p>
               </div>
 
               <div className="space-y-6">
@@ -80,60 +83,61 @@ export default function SignIn() {
               </div>
             </div>
 
-            <div className="bg-card rounded-lg p-8">
-              <div className="mb-6 flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Sign In</h2>
-                <div className="text-sm text-muted-foreground">
-                  as a User /{" "}
-                  <Link href="/admin/signin" className="text-primary">
-                    Admin
-                  </Link>
-                </div>
-              </div>
+            <div>
+              <Card className="border-border">
+                <CardHeader>
+                  <CardTitle>Sign In</CardTitle>
+                  <CardDescription>Enter your credentials to access your account</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Tabs defaultValue="user" onValueChange={(value) => setUserType(value)} className="mb-6">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="user">User</TabsTrigger>
+                      <TabsTrigger value="admin">Admin</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="email" className="block text-muted-foreground">
-                    Email
-                  </label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-muted/50 border-muted"
-                  />
-                </div>
+                  <div className="space-y-4">
+                    <FormField
+                      id="email"
+                      label="Email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      icon={<Mail className="h-4 w-4" />}
+                      required
+                    />
 
-                <div className="space-y-2">
-                  <label htmlFor="password" className="block text-muted-foreground">
-                    Password
-                  </label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-muted/50 border-muted"
-                  />
-                </div>
+                    <FormField
+                      id="password"
+                      label="Password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      icon={<Lock className="h-4 w-4" />}
+                      required
+                    />
 
-                <Button
-                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg"
-                  onClick={handleSignIn}
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Signing In..." : "Sign In"}
-                </Button>
-
-                <div className="text-center text-sm text-muted-foreground">
-                  Create a{" "}
-                  <Link href="/signup" className="text-primary">
-                    new account
-                  </Link>
-                  .
-                </div>
-              </div>
+                    <Button
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={handleSignIn}
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Signing In..." : "Sign In"}
+                    </Button>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col space-y-4 border-t pt-4">
+                  <div className="text-center text-sm text-muted-foreground">
+                    Don't have an account?{" "}
+                    <Link href="/signup" className="text-primary hover:underline">
+                      Create a new account
+                    </Link>
+                  </div>
+                </CardFooter>
+              </Card>
             </div>
           </div>
         </div>
