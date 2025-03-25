@@ -37,7 +37,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
           <Link href="/" className="flex items-center gap-2">
             <div className="relative h-8 w-8 overflow-hidden rounded-md">
               <Image
-                src="/placeholder-logo.svg"
+                src="/nexus-logo.svg"
                 alt="Nexus Library"
                 width={32}
                 height={32}
@@ -82,7 +82,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
                     <div className="flex flex-col gap-6 py-4">
                       <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                         <Image
-                          src="/placeholder-logo.svg"
+                          src="/nexus-logo.svg"
                           alt="Nexus Library"
                           width={32}
                           height={32}
@@ -141,4 +141,3 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
     </header>
   )
 }
-

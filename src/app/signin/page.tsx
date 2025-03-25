@@ -27,7 +27,7 @@ export default function SignIn() {
 
     setIsLoading(true)
     try {
-      await login(email, password)
+      await login(email)
       router.push("/library")
     } catch (error) {
       console.error("Login failed:", error)
@@ -38,7 +38,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
+    <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1 flex items-center justify-center py-12">
         <div className="container px-4">
@@ -145,4 +145,3 @@ export default function SignIn() {
     </div>
   )
 }
-

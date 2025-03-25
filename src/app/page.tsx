@@ -34,9 +34,9 @@ const bookCovers = [
 
 export default function Home() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
+    <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="flex-1 py-12">
+      <main className="flex-1 py-28">
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="space-y-4">
@@ -76,4 +76,3 @@ export default function Home() {
     </div>
   )
 }
-
