@@ -61,7 +61,7 @@ export default function SignUp() {
 
     setIsLoading(true)
     try {
-      await register(name, email, password)
+      await register(name)
       router.push("/verify")
     } catch (error) {
       console.error("Registration failed:", error)
