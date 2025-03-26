@@ -7,36 +7,36 @@ import { ArrowRight } from "lucide-react"
 // Sample book covers
 const bookCovers = [
   {
-    title: "Systemic Risk",
-    url: "/placeholder.svg?height=300&width=200",
+    "title": "A Tale of Two Cities",
+    "url": "/totc.jpg"
   },
   {
-    title: "Data Structure & Algorithms",
-    url: "/placeholder.svg?height=300&width=200",
+    "title": "The Little Prince",
+    "url": "/tlp2.jpg"
   },
   {
-    title: "Codeless Data Structures and Algorithms",
-    url: "/placeholder.svg?height=300&width=200",
+    "title": "The Alchemist",
+    "url": "alchemist.jpg"
   },
   {
-    title: "The Master Algorithm",
-    url: "/placeholder.svg?height=300&width=200",
+    "title": "Harry Potter and the Philosopher's Stone",
+    "url": "hp.jpg"
   },
   {
-    title: "The Bible of Algorithms & Data Structures",
-    url: "/placeholder.svg?height=300&width=200",
+    "title": "And Then There Were None",
+    "url": "attwn.webp"
   },
   {
-    title: "Analysis of Algorithms",
-    url: "/placeholder.svg?height=300&width=200",
-  },
+    "title": "The Hobbit",
+    "url": "hobbit.jpg"
+  }
 ]
 
 export default function Home() {
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className="flex-1 py-28">
+      <main className="flex-1 py-13">
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="space-y-4">
@@ -62,8 +62,8 @@ export default function Home() {
                     <Image
                       src={book.url || "/placeholder.svg"}
                       alt={book.title}
-                      width={140}
-                      height={200}
+                      width={200}
+                      height={400}
                       className="rounded-md shadow-lg"
                     />
                   </div>
