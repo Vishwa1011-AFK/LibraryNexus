@@ -79,3 +79,24 @@ export interface SignupPayload {
   password?: string;
   birthDate?: string;
 }
+
+export interface ReadingHistoryItem {
+  loanId: string;
+  book: {
+      id: string;
+      title: string;
+      author: string;
+      isbn: string;
+      coverUrl?: string;
+      category?: string;
+  } | null;
+  issueDate: string | Date;
+  completedDate: string | Date;
+}
+
+export interface ReadingHistoryApiResponse {
+  history: ReadingHistoryItem[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
