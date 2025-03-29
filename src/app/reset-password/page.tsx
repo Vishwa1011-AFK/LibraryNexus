@@ -11,48 +11,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Mail, Key, Lock } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 function ResetPasswordForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { toast } = useToast();
+
     const initialEmail = searchParams.get("email") || "";
+
     const [email, setEmail] = useState(initialEmail);
     const [otp, setOtp] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         setEmail(searchParams.get("email") || "");
     }, [searchParams]);
 
-    const handleResetPassword = async () => {
-        setError(null);
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+        if (!email || !/\S+@\S+\.\S+/.test(email)) newErrors.email = "Please enter a valid email.";
+        if (!otp) newErrors.otp = "OTP is required.";
+        else if (otp.length !== 8) newErrors.otp = "OTP must be 8 characters.";
+        if (!newPassword) newErrors.password = "New password is required.";
+        else if (newPassword.length < 8) newErrors.password = "Password must be at least 8 characters.";
+        if (newPassword !== confirmPassword) newErrors.confirmPassword = "Passwords do not match.";
 
-        if (!email || !otp || !newPassword || !confirmPassword) {
-            const msg = "Please fill in all fields.";
-            setError(msg);
-            toast({ title: "Missing Fields", description: msg, variant: "destructive" });
-            return;
-        }
-        if (otp.length !== 8) {
-            const msg = "OTP must be 8 characters long.";
-            setError(msg);
-            toast({ title: "Invalid OTP", description: msg, variant: "destructive" });
-            return;
-        }
-        if (newPassword.length < 8) {
-            const msg = "New password must be at least 8 characters long.";
-            setError(msg);
-            toast({ title: "Password Too Short", description: msg, variant: "destructive" });
-            return;
-        }
-        if (newPassword !== confirmPassword) {
-            const msg = "New passwords do not match.";
-            setError(msg);
-            toast({ title: "Password Mismatch", description: msg, variant: "destructive" });
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    }
+
+    const handleResetPassword = async () => {
+        setErrors({});
+        if (!validateForm()) {
+            toast({ title: "Validation Error", description: "Please check the fields below.", variant: "destructive" });
             return;
         }
 
@@ -63,12 +58,13 @@ function ResetPasswordForm() {
                 otp: otp.toUpperCase(),
                 newPassword
             });
+
             toast({ title: "Success", description: "Your password has been reset successfully. Please sign in." });
             router.replace('/signin');
         } catch (error: any) {
             console.error("Password reset failed:", error);
             const message = error.message || "Password reset failed. Please check the OTP or request a new one.";
-            setError(message);
+            setErrors({ form: message });
             toast({ title: "Reset Failed", description: message, variant: "destructive" });
         } finally {
             setIsLoading(false);
@@ -79,7 +75,7 @@ function ResetPasswordForm() {
         <Card className="border-border w-full">
             <CardHeader>
                 <CardTitle>Reset Your Password</CardTitle>
-                <CardDescription>Enter the OTP sent to your email and choose a new password.</CardDescription>
+                <CardDescription>Enter the OTP sent to your email ({email || '...'}) and choose a new password.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
@@ -87,81 +83,40 @@ function ResetPasswordForm() {
                         <Label htmlFor="email">Email</Label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                id="email"
-                                type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Your account email"
-                                required
-                                disabled={isLoading || !!initialEmail}
-                                className="pl-10"
-                            />
+                            <Input id="email" type="email" value={email} required disabled className="pl-10 bg-muted/30" readOnly/>
                         </div>
+                        {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-1">
-                        <Label htmlFor="otp">Verification Code (OTP)</Label>
+                        <Label htmlFor="otp" className={cn(errors.otp && "text-destructive")}>Verification Code (OTP)</Label>
                         <div className="relative">
                             <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                id="otp"
-                                type="text"
-                                maxLength={8}
-                                value={otp}
-                                onChange={(e) => setOtp(e.target.value)}
-                                placeholder="Enter 8-character code"
-                                required
-                                disabled={isLoading}
-                                className="pl-10"
-                            />
+                            <Input id="otp" type="text" maxLength={8} value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter 8-character code" required disabled={isLoading} className={cn("pl-10", errors.otp && "border-destructive")} />
                         </div>
+                        {errors.otp && <p className="text-sm text-destructive">{errors.otp}</p>}
                     </div>
                     <div className="space-y-1">
-                        <Label htmlFor="new-password">New Password</Label>
+                        <Label htmlFor="new-password" className={cn(errors.password && "text-destructive")}>New Password</Label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                id="new-password"
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Enter new password (min. 8 characters)"
-                                required
-                                disabled={isLoading}
-                                className="pl-10"
-                            />
+                            <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password (min. 8 characters)" required disabled={isLoading} className={cn("pl-10", errors.password && "border-destructive")} />
                         </div>
+                        {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
                     </div>
                     <div className="space-y-1">
-                        <Label htmlFor="confirm-password">Confirm New Password</Label>
+                        <Label htmlFor="confirm-password" className={cn(errors.confirmPassword && "text-destructive")}>Confirm New Password</Label>
                         <div className="relative">
                             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input
-                                id="confirm-password"
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="Re-enter new password"
-                                required
-                                disabled={isLoading}
-                                className="pl-10"
-                            />
+                            <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Re-enter new password" required disabled={isLoading} className={cn("pl-10", errors.confirmPassword && "border-destructive")} />
                         </div>
+                        {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword}</p>}
                     </div>
-                    {error && <p className="text-sm text-destructive text-center pt-2">{error}</p>}
-                    <Button
-                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                        onClick={handleResetPassword}
-                        disabled={isLoading}
-                    >
-                        {isLoading ? "Resetting..." : "Reset Password"}
-                    </Button>
+                    {errors.form && <p className="text-sm text-destructive text-center pt-2">{errors.form}</p>}
+                    <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleResetPassword} disabled={isLoading}>{isLoading ? "Resetting..." : "Reset Password"}</Button>
                 </div>
             </CardContent>
             <CardFooter className="flex justify-center border-t pt-4">
-                <Link href="/signin" className="text-sm text-primary hover:underline">
-                    Back to Sign In
-                </Link>
+                <Link href="/signin" className="text-sm text-primary hover:underline"> Back to Sign In </Link>
             </CardFooter>
         </Card>
     );
