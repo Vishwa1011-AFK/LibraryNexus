@@ -1,153 +1,193 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
-import { Pencil } from "lucide-react"
-
-// Sample user data
-const userData = {
-  name: "Anmol Yadav",
-  email: "aydv47@gmail.com",
-  dob: "03/03/2004",
-  books: [
-    { id: 1, title: "To Kill a Mockingbird", author: "Keyley Jenner" },
-    { id: 2, title: "To Kill a Mockingbird", author: "Keyley Jenner" },
-    { id: 3, title: "To Kill a Mockingbird", author: "Keyley Jenner" },
-    { id: 4, title: "To Kill a Mockingbird", author: "Keyley Jenner" },
-  ],
-}
+import { Pencil, User, Mail, Calendar, BookOpen } from "lucide-react"
+import { useAuth } from "@/context/auth-context"
+import { apiClient } from "@/lib/api"
+import { type BorrowedBook } from "@/types"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useToast } from "@/hooks/use-toast"
+import { format } from 'date-fns'
 
 export default function AccountPage() {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader/>
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4">
-          <div className="space-y-8">
-            <div className="bg-card rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Personal Info</h2>
-                <Link href="/account/edit">
-                  <Button variant="ghost" size="icon">
-                    <Pencil className="h-5 w-5 text-primary" />
-                  </Button>
-                </Link>
-              </div>
+    const { user, isLoading: authLoading } = useAuth()
+    const { toast } = useToast()
 
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-primary">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-user"
-                      >
-                        <circle cx="12" cy="8" r="5" />
-                        <path d="M20 21a8 8 0 0 0-16 0" />
-                      </svg>
-                    </span>
-                    <span className="text-muted-foreground">Name</span>
-                  </div>
-                  <span className="text-lg">:</span>
-                  <span>{userData.name}</span>
-                </div>
+    const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>([])
+    const [isLoadingBooks, setIsLoadingBooks] = useState(true)
+    const [errorBooks, setErrorBooks] = useState<string | null>(null)
 
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-primary">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-mail"
-                      >
-                        <rect width="20" height="16" x="2" y="4" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                      </svg>
-                    </span>
-                    <span className="text-muted-foreground">Email ID</span>
-                  </div>
-                  <span className="text-lg">:</span>
-                  <span>{userData.email}</span>
-                </div>
+    useEffect(() => {
+        const fetchBorrowed = async () => {
+            if (!user) {
+                setIsLoadingBooks(false)
+                return
+            }
 
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-primary">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="lucide lucide-calendar"
-                      >
-                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                        <line x1="16" x2="16" y1="2" y2="6" />
-                        <line x1="8" x2="8" y1="2" y2="6" />
-                        <line x1="3" x2="21" y1="10" y2="10" />
-                      </svg>
-                    </span>
-                    <span className="text-muted-foreground">Date of birth</span>
-                  </div>
-                  <span className="text-lg">:</span>
-                  <span>{userData.dob}</span>
-                </div>
-              </div>
+            setIsLoadingBooks(true)
+            setErrorBooks(null)
+            try {
+                const data = await apiClient<BorrowedBook[]>('/users/me/borrowed-books')
+                setBorrowedBooks(data || [])
+            } catch (err: any) {
+                setErrorBooks(err.message || "Failed to load borrowed books.")
+                toast({ title: "Error", description: err.message || "Failed to load borrowed books.", variant: "destructive" })
+            } finally {
+                setIsLoadingBooks(false)
+            }
+        }
 
-              <div className="mt-6 text-right">
-                <Link href="/account/change-password">
-                  <Button variant="link" className="text-muted-foreground hover:text-primary">
-                    Change password
-                  </Button>
-                </Link>
-              </div>
-            </div>
+        if (!authLoading && user) fetchBorrowed()
+        else if (!authLoading && !user) {
+            setIsLoadingBooks(false)
+            setBorrowedBooks([])
+        }
+    }, [user, authLoading, toast])
 
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">
-                  Books<span className="text-primary">(4)</span>
-                </h2>
-                <div className="text-right text-muted-foreground">Author</div>
-              </div>
+    const formatDate = (dateInput: string | Date | undefined): string => {
+        if (!dateInput) return 'N/A'
+        try {
+            return format(new Date(dateInput), 'PP')
+        } catch {
+            return 'Invalid Date'
+        }
+    }
 
-              <div className="bg-card rounded-lg overflow-hidden">
-                {userData.books.map((book, index) => (
-                  <div
-                    key={book.id}
-                    className="flex justify-between items-center p-4 border-b border-muted last:border-0"
-                  >
-                    <div className="flex items-center">
-                      <span className="text-primary mr-4">{index + 1}.</span>
-                      <span>{book.title}</span>
+    if (authLoading || (isLoadingBooks && user)) {
+        return (
+            <div className="flex min-h-screen flex-col">
+                <SiteHeader />
+                <main className="flex-1 py-8">
+                    <div className="container mx-auto px-4">
+                        <div className="space-y-8">
+                            <div className="bg-card rounded-lg p-6">
+                                <div className="flex justify-between items-center mb-4">
+                                    <Skeleton className="h-8 w-1/4" />
+                                    <Skeleton className="h-8 w-8" />
+                                </div>
+                                <div className="space-y-4">
+                                    <Skeleton className="h-6 w-3/4" />
+                                    <Skeleton className="h-6 w-full" />
+                                    <Skeleton className="h-6 w-1/2" />
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <Skeleton className="h-8 w-1/3" />
+                                    <Skeleton className="h-6 w-1/4" />
+                                </div>
+                                <div className="bg-card rounded-lg overflow-hidden space-y-2 p-4">
+                                    <Skeleton className="h-8 w-full" />
+                                    <Skeleton className="h-8 w-full" />
+                                    <Skeleton className="h-8 w-full" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div className="text-muted-foreground">{book.author}</div>
-                  </div>
-                ))}
-              </div>
+                </main>
             </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  )
-}
+        )
+    }
 
+    if (!user) {
+        return (
+            <div className="flex min-h-screen flex-col">
+                <SiteHeader />
+                <main className="flex-1 py-8">
+                    <div className="container mx-auto px-4 text-center">Please log in to view your account.</div>
+                </main>
+            </div>
+        )
+    }
+
+    return (
+        <div className="flex min-h-screen flex-col">
+            <SiteHeader />
+            <main className="flex-1 py-8">
+                <div className="container mx-auto px-4">
+                    <div className="space-y-8">
+                        <div className="bg-card rounded-lg p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-bold">Personal Info</h2>
+                                <Link href="/account/edit">
+                                    <Button variant="ghost" size="icon">
+                                        <Pencil className="h-5 w-5 text-primary" />
+                                    </Button>
+                                </Link>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2 w-28">
+                                        <User className="h-5 w-5 text-primary" />
+                                        <span className="text-muted-foreground">Name</span>
+                                    </div>
+                                    <span className="text-lg mx-2">:</span>
+                                    <span>{`${user.firstName || ''} ${user.middleName || ''} ${user.lastName || ''}`.replace(/\s+/g, ' ').trim()}</span>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2 w-28">
+                                        <Mail className="h-5 w-5 text-primary" />
+                                        <span className="text-muted-foreground">Email ID</span>
+                                    </div>
+                                    <span className="text-lg mx-2">:</span>
+                                    <span>{user.email}</span>
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2 w-28">
+                                        <Calendar className="h-5 w-5 text-primary" />
+                                        <span className="text-muted-foreground">Date of birth</span>
+                                    </div>
+                                    <span className="text-lg mx-2">:</span>
+                                    <span>{user.birthDate ? formatDate(user.birthDate) : 'Not Set'}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="flex justify-between items-center mb-4">
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <BookOpen className="h-6 w-6" /> My Books
+                                    {!isLoadingBooks && <span className="text-primary">({borrowedBooks.length})</span>}
+                                </h2>
+                            </div>
+                            {isLoadingBooks ? (
+                                <div className="bg-card rounded-lg overflow-hidden space-y-2 p-4">
+                                    <Skeleton className="h-8 w-full" />
+                                    <Skeleton className="h-8 w-full" />
+                                    <Skeleton className="h-8 w-full" />
+                                </div>
+                            ) : errorBooks ? (
+                                <div className="bg-card rounded-lg p-6 text-center text-destructive">{errorBooks}</div>
+                            ) : borrowedBooks.length > 0 ? (
+                                <div className="bg-card rounded-lg overflow-hidden">
+                                    <div className="p-4 grid grid-cols-[1fr_auto] items-center gap-4 font-medium border-b bg-muted/50">
+                                        <div>Book Title / Author</div>
+                                        <div className="text-right">Due Date</div>
+                                    </div>
+                                    {borrowedBooks.map((item, index) => (
+                                        <div key={item.loanId || item.book?.id || index} className="flex justify-between items-center p-4 border-b border-muted last:border-0">
+                                            <div className="flex items-center space-x-3">
+                                                <span className="text-primary font-semibold">{index + 1}.</span>
+                                                <Link href={`/books/${item.book?.id}`} className="hover:underline">
+                                                    <div>
+                                                        <span className="block font-medium">{item.book?.title || 'Unknown Book'}</span>
+                                                        <span className="block text-sm text-muted-foreground">{item.book?.author || 'Unknown Author'}</span>
+                                                    </div>
+                                                </Link>
+                                            </div>
+                                            <div className="text-right text-sm text-muted-foreground">{formatDate(item.dueDate)}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-card rounded-lg p-6 text-center text-muted-foreground">You have no books currently borrowed.</div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    )
+}

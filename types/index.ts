@@ -39,3 +39,19 @@ export interface BooksApiResponse {
     page: number;
     totalPages: number;
 }
+
+export interface BorrowedBook {
+  loanId: string;
+  book: {
+      id: string;
+      title: string;
+      author: string;
+      isbn: string;
+      coverUrl?: string;
+      category?: string;
+      location?: string;
+      publishDate?: string;
+  } | null;
+  issueDate: string | Date;
+  dueDate: string | Date;
+}

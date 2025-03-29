@@ -2,20 +2,19 @@ import { User, Mail } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface UserInfoHeaderProps {
-  name: string
-  email: string
+  name?: string | null
+  email?: string | null
   isAdmin?: boolean
   className?: string
 }
 
 export function UserInfoHeader({ name, email, isAdmin = false, className }: UserInfoHeaderProps) {
+  if (!name || !email) {
+    return null
+  }
+
   return (
-    <div
-      className={cn(
-        "flex flex-col md:flex-row md:items-center md:justify-between mb-8 border-b border-border pb-4",
-        className,
-      )}
-    >
+    <div className={cn("flex flex-col md:flex-row md:items-center md:justify-between mb-8 border-b border-border pb-4", className)}>
       <div className="flex items-center mb-2 md:mb-0 gap-2">
         <User className="h-5 w-5 text-primary" />
         <span className="text-muted-foreground">Name:</span>
@@ -34,4 +33,3 @@ export function UserInfoHeader({ name, email, isAdmin = false, className }: User
     </div>
   )
 }
-
