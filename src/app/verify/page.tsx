@@ -1,94 +1,157 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function VerifyAccount() {
-  const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""])
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+    const [verificationCode, setVerificationCode] = useState<string[]>(Array(6).fill(""));
+    const [isLoadingVerify, setIsLoadingVerify] = useState(false);
+    const [isLoadingResend, setIsLoadingResend] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [email, setEmail] = useState<string | null>(null);
+    const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
 
-  // Initialize refs array
-  useEffect(() => {
-    inputRefs.current = inputRefs.current.slice(0, 6)
-  }, [])
+    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const router = useRouter();
+    const { toast } = useToast();
 
-  const handleInputChange = (index: number, value: string) => {
-    if (value.length <= 1) {
-      const newCode = [...verificationCode]
-      newCode[index] = value
-      setVerificationCode(newCode)
+    useEffect(() => {
+        const storedEmail = localStorage.getItem('verificationEmail');
+        if (storedEmail) {
+            setEmail(storedEmail);
+            const parts = storedEmail.split('@');
+            if (parts.length === 2) {
+                setMaskedEmail(`${parts[0].substring(0, 3)}***@${parts[1]}`);
+            } else {
+                setMaskedEmail('your email address');
+            }
+        } else {
+            setError("Could not find email address for verification. Please sign up again.");
+            toast({ title: "Error", description: "Email address not found for verification.", variant: "destructive" });
+        }
+        inputRefs.current[0]?.focus();
+    }, []);
 
-      // Auto-focus next input if current input is filled
-      if (value !== "" && index < 5) {
-        inputRefs.current[index + 1]?.focus()
-      }
-    }
-  }
+    useEffect(() => {
+        inputRefs.current = inputRefs.current.slice(0, 6);
+    }, []);
 
-  const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Move to previous input on backspace if current input is empty
-    if (e.key === "Backspace" && verificationCode[index] === "" && index > 0) {
-      inputRefs.current[index - 1]?.focus()
-    }
-  }
+    const handleInputChange = (index: number, value: string) => {
+        const digit = value.match(/^[0-9]$/);
+        if (value === "" || digit) {
+            const newCode = [...verificationCode];
+            newCode[index] = value;
+            setVerificationCode(newCode);
+            if (digit && index < 5) {
+                inputRefs.current[index + 1]?.focus();
+            }
+        }
+    };
 
-  const handleVerify = () => {
-    const code = verificationCode.join("")
-    console.log("Verifying code:", code)
-    // Add verification logic here
-  }
+    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Backspace") {
+            e.preventDefault();
+            const newCode = [...verificationCode];
+            if (newCode[index] !== "") {
+                newCode[index] = "";
+                setVerificationCode(newCode);
+            } else if (index > 0) {
+                inputRefs.current[index - 1]?.focus();
+                newCode[index - 1] = "";
+                setVerificationCode(newCode);
+            }
+        } else if (e.key === 'ArrowLeft' && index > 0) {
+            inputRefs.current[index - 1]?.focus();
+        } else if (e.key === 'ArrowRight' && index < 5) {
+            inputRefs.current[index + 1]?.focus();
+        }
+    };
 
-  const handleResend = () => {
-    console.log("Resending verification code")
-    // Add resend logic here
-  }
+    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        e.preventDefault();
+        const paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
+        if (paste.length === 6) {
+            const newCode = paste.split('');
+            setVerificationCode(newCode);
+            inputRefs.current[5]?.focus();
+        } else if (paste.length > 0) {
+            const newCode = Array(6).fill('');
+            paste.split('').slice(0, 6).forEach((char, index) => {
+                newCode[index] = char;
+            });
+            setVerificationCode(newCode);
+            inputRefs.current[Math.min(5, paste.length)]?.focus();
+        }
+    };
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader/>
-      <main className="flex-1 flex flex-col items-center justify-center py-12">
-        <div className="max-w-md w-full mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center mb-4">Verify your account</h1>
-          <p className="text-center text-muted-foreground mb-8">
-            A verification code is just sent to your email address(***34@gmail.com). Enter the code below to confirm
-            your account.
-          </p>
+    const handleVerify = async () => {
+        if (!email) {
+            toast({ title: "Error", description: "Email address not found.", variant: "destructive" });
+            return;
+        }
+        const code = verificationCode.join("");
+        if (code.length !== 6) {
+            setError("Please enter the complete 6-digit code.");
+            toast({ title: "Incomplete Code", description: "Please enter the complete 6-digit code.", variant: "destructive"});
+            return;
+        }
+        setError(null);
+        setIsLoadingVerify(true);
+        try {
+            await apiClient('/auth/verify-signup', 'POST', { email, otp: code });
+            toast({ title: "Success!", description: "Your account has been verified. Please sign in." });
+            localStorage.removeItem('verificationEmail');
+            router.replace('/signin');
+        } catch (error: any) {
+            console.error("Verification failed:", error);
+            const message = error.message || "Verification failed. Please check the code or resend.";
+            setError(message);
+            toast({ title: "Verification Failed", description: message, variant: "destructive" });
+        } finally {
+            setIsLoadingVerify(false);
+        }
+    };
 
-          <div className="flex justify-center gap-2 mb-8">
-            {verificationCode.map((digit, index) => (
-              <Input
-                key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
-                type="text"
-                inputMode="numeric"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleInputChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-14 h-14 text-center text-xl bg-muted/50 border-muted"
-              />
-            ))}
-          </div>
+    const handleResend = async () => {
+        if (!email) {
+            toast({ title: "Error", description: "Email address not found.", variant: "destructive" });
+            return;
+        }
+        setError(null);
+        setIsLoadingResend(true);
+        try {
+            await apiClient('/auth/signup-otp', 'POST', { email });
+            toast({ title: "Code Resent", description: "A new verification code has been sent to your email." });
+            setVerificationCode(Array(6).fill(""));
+            inputRefs.current[0]?.focus();
+        } catch (error: any) {
+            console.error("Failed to resend code:", error);
+            const message = error.message || "Failed to resend code. Please try again later.";
+            setError(message);
+            toast({ title: "Error", description: message, variant: "destructive" });
+        } finally {
+            setIsLoadingResend(false);
+        }
+    };
 
-          <div className="flex justify-center gap-4">
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8" onClick={handleVerify}>
-              Verify
-            </Button>
-            <Button
-              variant="outline"
-              className="border-muted text-muted-foreground hover:text-foreground px-8"
-              onClick={handleResend}
-            >
-              Resend
-            </Button>
-          </div>
+    return (
+        <div className="flex min-h-screen flex-col">
+            <SiteHeader/>
+            <main className="flex-1 flex flex-col items-center justify-center py-12">
+                <div className="max-w-md w-full mx-auto px-4">
+                    <h1 className="text-3xl font-bold text-center mb-4">Verify your account</h1>
+                    <p className="text-center text-muted-foreground mb-8">
+                        A verification code was sent to {maskedEmail || 'your email address'}.
+                        Enter the code below to confirm your account.
+                    </p>
+                </div>
+            </main>
         </div>
-      </main>
-    </div>
-  )
+    )
 }
-
