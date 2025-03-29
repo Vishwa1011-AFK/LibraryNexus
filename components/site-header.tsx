@@ -9,15 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/context/auth-context"
 
-interface SiteHeaderProps {
-  isLoggedIn?: boolean
-}
-
-export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
+export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const isMobile = useIsMobile()
   const pathname = usePathname()
+  const { user, logout } = useAuth()
+  const isLoggedIn = !!user
 
   const navItems = [
     { name: "Library", href: "/library", icon: <BookOpen className="h-5 w-5" /> },
@@ -26,8 +25,11 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
     { name: "Account", href: "/account", icon: <User className="h-5 w-5" /> },
   ]
 
-  const isActive = (path: string) => {
-    return pathname === path || pathname.startsWith(`${path}/`)
+  const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`)
+
+  const handleSignOut = async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
+    e.preventDefault()
+    await logout()
   }
 
   return (
@@ -36,20 +38,12 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
             <div className="relative h-8 w-8 overflow-hidden rounded-md">
-              <Image
-                src="/nexus-logo.svg"
-                alt="Nexus Library"
-                width={32}
-                height={32}
-                className="object-contain"
-                priority
-              />
+              <Image src="/nexus-logo.svg" alt="Nexus Library" width={32} height={32} className="object-contain" priority />
             </div>
             <span className="hidden font-bold sm:inline-block">Nexus Library</span>
           </Link>
         </div>
 
-        {/* Desktop Navigation */}
         {isLoggedIn && !isMobile && (
           <nav className="hidden md:flex items-center gap-6">
             {navItems.map((item) => (
@@ -58,7 +52,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
                 href={item.href}
                 className={cn(
                   "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
-                  isActive(item.href) ? "text-primary" : "text-muted-foreground",
+                  isActive(item.href) ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 {item.name}
@@ -81,13 +75,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
                   <SheetContent side="left" className="w-[240px] sm:w-[300px]">
                     <div className="flex flex-col gap-6 py-4">
                       <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                        <Image
-                          src="/nexus-logo.svg"
-                          alt="Nexus Library"
-                          width={32}
-                          height={32}
-                          className="rounded-md"
-                        />
+                        <Image src="/nexus-logo.svg" alt="Nexus Library" width={32} height={32} className="rounded-md" />
                         <span className="font-bold">Nexus Library</span>
                       </Link>
                       <nav className="flex flex-col gap-4">
@@ -97,7 +85,7 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
                             href={item.href}
                             className={cn(
                               "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
-                              isActive(item.href) ? "text-primary" : "text-muted-foreground",
+                              isActive(item.href) ? "text-primary" : "text-muted-foreground"
                             )}
                             onClick={() => setIsMenuOpen(false)}
                           >
@@ -108,7 +96,10 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
                         <Link
                           href="/signin"
                           className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-                          onClick={() => setIsMenuOpen(false)}
+                          onClick={(e) => {
+                            handleSignOut(e)
+                            setIsMenuOpen(false)
+                          }}
                         >
                           <LogOut className="h-5 w-5" />
                           Sign Out
@@ -118,18 +109,14 @@ export function SiteHeader({ isLoggedIn = false }: SiteHeaderProps) {
                   </SheetContent>
                 </Sheet>
               )}
-              <Link href="/signin" className="hidden md:block">
-                <Button variant="outline" size="sm">
-                  Sign Out
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" className="hidden md:block" onClick={handleSignOut}>
+                Sign Out
+              </Button>
             </>
           ) : (
             <>
               <Link href="/signin">
-                <Button variant="outline" size="sm" className="hidden sm:flex">
-                  Sign In
-                </Button>
+                <Button variant="outline" size="sm" className="hidden sm:flex">Sign In</Button>
               </Link>
               <Link href="/signup">
                 <Button size="sm">Sign Up</Button>

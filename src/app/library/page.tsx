@@ -122,7 +122,7 @@ export default function LibraryPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
-      <SiteHeader isLoggedIn={true} />
+      <SiteHeader />
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
           <UserInfoHeader name={userData.name} email={userData.email} isAdmin={isAdmin} />

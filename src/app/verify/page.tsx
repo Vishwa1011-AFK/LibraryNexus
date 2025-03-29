@@ -49,7 +49,7 @@ export default function VerifyAccount() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader isLoggedIn={true} />
+      <SiteHeader/>
       <main className="flex-1 flex flex-col items-center justify-center py-12">
         <div className="max-w-md w-full mx-auto px-4">
           <h1 className="text-3xl font-bold text-center mb-4">Verify your account</h1>

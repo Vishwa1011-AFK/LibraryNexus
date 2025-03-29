@@ -101,13 +101,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const logout = async () => {
+    console.log("Attempting logout...");
     try {
-        await apiClient('/auth/logout', 'POST')
-    } catch {}
-    setUser(null)
-    setAccessToken(null)
-    router.push("/signin")
-  }
+        await apiClient('/auth/logout', 'POST');
+        console.log("Logout API call successful.");
+    } catch (error) {
+        console.error("Logout API call failed (might be okay if session already invalid):", error);
+    } finally {
+        setUser(null);
+        setAccessToken(null);
+        console.log("Frontend state cleared.");
+        router.replace("/signin");
+    }
+ }
 
   const value: AuthContextProps = {
     user,

@@ -75,7 +75,7 @@ export default function SignUp() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader isLoggedIn={false} />
+      <SiteHeader/>
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4 max-w-md">
           <Card className="border-border">

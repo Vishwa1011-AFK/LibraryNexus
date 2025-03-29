@@ -19,7 +19,7 @@ const userData = {
 export default function AccountPage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader isLoggedIn={true} />
+      <SiteHeader/>
       <main className="flex-1 py-8">
         <div className="container mx-auto px-4">
           <div className="space-y-8">
