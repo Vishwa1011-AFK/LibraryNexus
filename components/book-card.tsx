@@ -3,6 +3,7 @@ import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { type Book } from "@/types";
 
 interface BookCardProps {
   id: number | string
@@ -29,8 +30,8 @@ export function BookCard({
 }: BookCardProps) {
   return (
     <Link
-      href={isAdmin ? `/admin/books/${id}` : `/books/${id}`}
-      className="block transition-transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+    href={isAdmin ? `/admin/books/${id}` : `/books/${id}`}
+    className="block transition-transform hover:scale-102 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
     >
       <Card
         className={cn(
@@ -39,22 +40,22 @@ export function BookCard({
         )}
       >
         <CardContent className="p-3">
-          <div className="aspect-[2/3] relative mb-3 overflow-hidden rounded-md shadow-sm">
-            <Image
-              src={coverUrl || "/placeholder.svg"}
-              alt={title}
-              fill
-              className="object-cover transition-transform duration-300 hover:scale-105"
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              style={{ transition: 'opacity 0.3s ease-in-out' }}
-            />
+                <div className="aspect-[2/3] relative mb-3 overflow-hidden rounded-md shadow-sm">
+                    <Image
+                    src={coverUrl || "/placeholder.svg"}
+                    alt={title}
+                    fill
+                    className="object-cover transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{ transition: 'opacity 0.3s ease-in-out' }}
+                  />
           </div>
           <h3 className="font-medium line-clamp-1 text-foreground" title={title}>
-            {title}
-          </h3>
-          <p className="text-sm text-muted-foreground line-clamp-1" title={author}>
-            {author}
-          </p>
+                     {title}
+                 </h3>
+                 <p className="text-sm text-muted-foreground line-clamp-1" title={author}>
+                     {author}
+                 </p>
         </CardContent>
 
         <CardFooter className="p-3 pt-0 flex justify-between items-center">
