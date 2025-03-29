@@ -71,3 +71,11 @@ export interface WishlistApiResponse {
   books: WishlistItem[]
 }
 
+export interface SignupPayload {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  birthDate?: string;
+}

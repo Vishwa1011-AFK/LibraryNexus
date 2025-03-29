@@ -5,6 +5,7 @@ import { createContext, useState, useEffect, useContext, useCallback } from "rea
 import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api"
 import { type AuthUser } from "@/types"
+import { type SignupPayload } from "@/types";
 
 interface SignInResponse {
     accessToken: string
@@ -27,7 +28,7 @@ interface AuthContextProps {
   accessToken: string | null;
   login: (credentials: { email: string; password: string }) => Promise<void>;
   logout: () => Promise<void>;
-  register: (userData: any) => Promise<void>;
+  register: (userData: SignupPayload) => Promise<void>;
   isLoading: boolean;
   checkAuthStatus: () => Promise<void>;
   updateUserContext: (updatedUserData: Partial<AuthUser>) => void;
@@ -38,7 +39,7 @@ const AuthContext = createContext<AuthContextProps>({
   accessToken: null,
   login: async () => {},
   logout: async () => {},
-  register: async () => {},
+  register: async () => { throw new Error("Register function not implemented in context yet."); },
   isLoading: true,
   checkAuthStatus: async () => {},
   updateUserContext: () => {},
@@ -81,10 +82,9 @@ interface AuthProviderProps {
       }
     };
   
-    const register = async (userData: any) => {
+    const register = async (userData: SignupPayload) => {
       try {
-        await apiClient("/auth/register", "POST", userData);
-        await login({ email: userData.email, password: userData.password });
+        await Promise.resolve();
       } catch (error) {
         console.error("Registration failed", error);
       }
