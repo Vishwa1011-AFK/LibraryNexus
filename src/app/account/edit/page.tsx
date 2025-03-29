@@ -1,172 +1,140 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useAuth } from "@/context/auth-context";
+import { apiClient } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { format, parse, isValid } from 'date-fns';
+import { Skeleton } from "@/components/ui/skeleton";
+import { AuthUser } from "@/types";
 
 export default function EditProfilePage() {
-  const [firstName, setFirstName] = useState("Diwakar")
-  const [middleName, setMiddleName] = useState("")
-  const [lastName, setLastName] = useState("Dubey")
-  const [dob, setDob] = useState("03/03/2004")
+    const { user, isLoading: authLoading, updateUserContext } = useAuth();
+    const router = useRouter();
+    const { toast } = useToast();
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader/>
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <h1 className="text-3xl font-bold mb-8">Edit Profile</h1>
+    const [firstName, setFirstName] = useState("")
+    const [middleName, setMiddleName] = useState("")
+    const [lastName, setLastName] = useState("")
+    const [dob, setDob] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-          <div className="bg-card rounded-lg p-6 mb-6">
-            <div className="space-y-6">
-              <div className="flex items-center">
-                <div className="flex items-center space-x-2 w-48">
-                  <span className="text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-user"
-                    >
-                      <circle cx="12" cy="8" r="5" />
-                      <path d="M20 21a8 8 0 0 0-16 0" />
-                    </svg>
-                  </span>
-                  <label htmlFor="first-name" className="text-lg">
-                    First Name
-                  </label>
-                </div>
-                <span className="mx-4 text-xl">:</span>
-                <Input
-                  id="first-name"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="flex-1 bg-muted/50 border-muted"
-                />
-              </div>
+    useEffect(() => {
+        if (user) {
+            setFirstName(user.firstName || "");
+            setMiddleName(user.middleName || "");
+            setLastName(user.lastName || "");
+            if (user.birthDate) {
+                try {
+                    const dateObj = typeof user.birthDate === 'string' ? new Date(user.birthDate) : user.birthDate;
+                    if (isValid(dateObj)) {
+                        setDob(format(dateObj, 'yyyy-MM-dd'));
+                    } else {
+                        setDob('');
+                    }
+                } catch {
+                    setDob('');
+                }
+            } else {
+                setDob('');
+            }
+        }
+    }, [user]);
 
-              <div className="flex items-center">
-                <div className="flex items-center space-x-2 w-48">
-                  <span className="text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-user"
-                    >
-                      <circle cx="12" cy="8" r="5" />
-                      <path d="M20 21a8 8 0 0 0-16 0" />
-                    </svg>
-                  </span>
-                  <label htmlFor="middle-name" className="text-lg">
-                    Middle Name
-                  </label>
-                </div>
-                <span className="mx-4 text-xl">:</span>
-                <Input
-                  id="middle-name"
-                  type="text"
-                  value={middleName}
-                  onChange={(e) => setMiddleName(e.target.value)}
-                  className="flex-1 bg-muted/50 border-muted"
-                />
-              </div>
+    const handleSaveChanges = async () => {
+        setIsSubmitting(true);
+        const payload: { firstName?: string; middleName?: string; lastName?: string; birthDate?: string } = {};
+        if (firstName !== user?.firstName) payload.firstName = firstName;
+        if (middleName !== user?.middleName) payload.middleName = middleName;
+        if (lastName !== user?.lastName) payload.lastName = lastName;
 
-              <div className="flex items-center">
-                <div className="flex items-center space-x-2 w-48">
-                  <span className="text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-user"
-                    >
-                      <circle cx="12" cy="8" r="5" />
-                      <path d="M20 21a8 8 0 0 0-16 0" />
-                    </svg>
-                  </span>
-                  <label htmlFor="last-name" className="text-lg">
-                    Last Name
-                  </label>
-                </div>
-                <span className="mx-4 text-xl">:</span>
-                <Input
-                  id="last-name"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="flex-1 bg-muted/50 border-muted"
-                />
-              </div>
+        let originalDobFormatted = '';
+        if (user?.birthDate) {
+            try {
+                const dateObj = typeof user.birthDate === 'string' ? new Date(user.birthDate) : user.birthDate;
+                if (isValid(dateObj)) {
+                    originalDobFormatted = format(dateObj, 'yyyy-MM-dd');
+                }
+            } catch {}
+        }
 
-              <div className="flex items-center">
-                <div className="flex items-center space-x-2 w-48">
-                  <span className="text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-calendar"
-                    >
-                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                      <line x1="16" x2="16" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="2" y2="6" />
-                      <line x1="3" x2="21" y1="10" y2="10" />
-                    </svg>
-                  </span>
-                  <label htmlFor="dob" className="text-lg">
-                    Date of birth
-                  </label>
-                </div>
-                <span className="mx-4 text-xl">:</span>
-                <Input
-                  id="dob"
-                  type="text"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="flex-1 bg-muted/50 border-muted"
-                />
-              </div>
+        if (dob && dob !== originalDobFormatted) {
+            try {
+                const parsedDate = parse(dob, 'yyyy-MM-dd', new Date());
+                if (isValid(parsedDate)) {
+                    payload.birthDate = parsedDate.toISOString();
+                } else {
+                    toast({ title: "Invalid Date", description: "Please enter a valid date of birth.", variant: "destructive" });
+                    setIsSubmitting(false);
+                    return;
+                }
+            } catch {
+                toast({ title: "Invalid Date Format", description: "Please use YYYY-MM-DD format.", variant: "destructive" });
+                setIsSubmitting(false);
+                return;
+            }
+        }
+
+        if (Object.keys(payload).length === 0) {
+            toast({ title: "No Changes", description: "You haven't made any changes to save." });
+            setIsSubmitting(false);
+            return;
+        }
+
+        try {
+            const response = await apiClient<{ user: AuthUser, message: string }>('/users/me', 'PATCH', payload);
+            toast({ title: "Success", description: response.message || "Profile updated successfully!" });
+            updateUserContext(response.user);
+            router.push('/account');
+        } catch (error: any) {
+            console.error("Failed to update profile:", error);
+            toast({ title: "Update Failed", description: error.message || "Could not update profile.", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    if (authLoading || !user) {
+        return (
+            <div className="flex min-h-screen flex-col">
+                <SiteHeader />
+                <main className="flex-1 py-8">
+                    <div className="container mx-auto px-4 max-w-3xl">
+                        <Skeleton className="h-9 w-1/3 mb-8" />
+                        <div className="bg-card rounded-lg p-6 mb-6 space-y-6">
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                        </div>
+                    </div>
+                </main>
             </div>
-          </div>
+        )
+    }
 
-          <div className="flex justify-end">
-            <Button
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => console.log("Save Changes clicked")}
-            >
-              Save Changes
-            </Button>
-          </div>
+    return (
+        <div className="flex min-h-screen flex-col">
+            <SiteHeader />
+            <main className="flex-1 py-8">
+                <div className="container mx-auto px-4 max-w-3xl">
+                    <h1 className="text-3xl font-bold mb-8">Edit Profile</h1>
+                    <div className="bg-card rounded-lg p-6 mb-6 space-y-6">
+                        <Input id="first-name" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} disabled={isSubmitting} />
+                        <Input id="middle-name" type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} placeholder="(Optional)" disabled={isSubmitting} />
+                        <Input id="last-name" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} disabled={isSubmitting} />
+                        <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} disabled={isSubmitting} />
+                    </div>
+                    <div className="flex justify-end">
+                        <Button onClick={handleSaveChanges} disabled={isSubmitting || authLoading}>{isSubmitting ? "Saving..." : "Save Changes"}</Button>
+                        <Button variant="outline" className="ml-4" onClick={() => router.back()} disabled={isSubmitting}>Cancel</Button>
+                    </div>
+                </div>
+            </main>
         </div>
-      </main>
-    </div>
-  )
+    )
 }
-

@@ -55,3 +55,19 @@ export interface BorrowedBook {
   issueDate: string | Date;
   dueDate: string | Date;
 }
+
+export interface WishlistItem {
+  id: string
+  title: string
+  author: string
+  isbn: string
+  coverUrl?: string
+  category?: string
+  addedAt: string | Date
+}
+
+export interface WishlistApiResponse {
+  userId: string
+  books: WishlistItem[]
+}
+

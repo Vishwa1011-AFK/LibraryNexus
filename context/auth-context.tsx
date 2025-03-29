@@ -23,13 +23,14 @@ interface SignInResponse {
 }
 
 interface AuthContextProps {
-  user: AuthUser | null
-  accessToken: string | null
-  login: (credentials: { email: string, password: string }) => Promise<void>
-  logout: () => Promise<void>
-  register: (userData: any) => Promise<void>
-  isLoading: boolean
-  checkAuthStatus: () => Promise<void>
+  user: AuthUser | null;
+  accessToken: string | null;
+  login: (credentials: { email: string; password: string }) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (userData: any) => Promise<void>;
+  isLoading: boolean;
+  checkAuthStatus: () => Promise<void>;
+  updateUserContext: (updatedUserData: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -40,94 +41,88 @@ const AuthContext = createContext<AuthContextProps>({
   register: async () => {},
   isLoading: true,
   checkAuthStatus: async () => {},
-})
+  updateUserContext: () => {},
+});
 
 interface AuthProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null)
-  const [accessToken, setAccessToken] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState<boolean>(true)
-  const router = useRouter()
-
-  const checkAuthStatus = useCallback(async () => {
-    try {
-        const userData = await apiClient<AuthUser>('/auth/me', 'GET')
-        try {
-            const tokenResponse = await apiClient<{ accessToken: string }>('/auth/token', 'POST')
-            setAccessToken(tokenResponse.accessToken)
-        } catch {
-            setAccessToken(null)
-        }
-        setUser({ ...userData, isAdmin: userData.role === 'admin' })
-    } catch {
-        setUser(null)
-        setAccessToken(null)
-    } finally {
-        setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    checkAuthStatus()
-  }, [checkAuthStatus])
-
-  const login = async (credentials: { email: string, password: string }) => {
-    try {
-        const response = await apiClient<SignInResponse>('/auth/signin', 'POST', credentials)
-        const loggedInUser: AuthUser = {
-            id: response.user.user_id,
-            role: response.user.role,
-            isAdmin: response.user.role === 'admin',
-            firstName: response.userdetails.firstName,
-            middleName: response.userdetails.middleName,
-            lastName: response.userdetails.lastName,
-            email: response.userdetails.email,
-            birthDate: response.userdetails.birthDate,
-        }
-        setUser(loggedInUser)
-        setAccessToken(response.accessToken)
-    } catch {
-        setUser(null)
-        setAccessToken(null)
-        throw new Error("Login failed")
-    }
-  }
-
-  const register = async (userData: any) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-  }
-
-  const logout = async () => {
-    console.log("Attempting logout...");
-    try {
-        await apiClient('/auth/logout', 'POST');
-        console.log("Logout API call successful.");
-    } catch (error) {
-        console.error("Logout API call failed (might be okay if session already invalid):", error);
-    } finally {
+  export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const router = useRouter();
+  
+    const checkAuthStatus = useCallback(async () => {
+      try {
+        setIsLoading(true);
+        const response = await apiClient<AuthUser>("/auth/status");
+        setUser(response);
+      } catch {
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }, []);
+  
+    useEffect(() => {
+      checkAuthStatus();
+    }, [checkAuthStatus]);
+  
+    const login = async (credentials: { email: string; password: string }) => {
+      try {
+        const response = await apiClient<{ user: AuthUser; token: string }>("/auth/login", "POST", credentials);
+        setUser(response.user);
+        setAccessToken(response.token);
+        router.push("/");
+      } catch (error) {
+        console.error("Login failed", error);
+      }
+    };
+  
+    const register = async (userData: any) => {
+      try {
+        await apiClient("/auth/register", "POST", userData);
+        await login({ email: userData.email, password: userData.password });
+      } catch (error) {
+        console.error("Registration failed", error);
+      }
+    };
+  
+    const logout = async () => {
+      try {
+        await apiClient("/auth/logout", "POST");
         setUser(null);
         setAccessToken(null);
-        console.log("Frontend state cleared.");
-        router.replace("/signin");
-    }
- }
-
-  const value: AuthContextProps = {
-    user,
-    accessToken,
-    login,
-    logout,
-    register,
-    isLoading,
-    checkAuthStatus
-  }
-
-  return <AuthContext.Provider value={value}>{!isLoading ? children : <div className="flex min-h-screen items-center justify-center">Authenticating...</div>}</AuthContext.Provider>
-}
-
-export const useAuth = () => {
-  return useContext(AuthContext)
-}
+        router.push("/login");
+      } catch (error) {
+        console.error("Logout failed", error);
+      }
+    };
+  
+    const updateUserContext = (updatedUserData: Partial<AuthUser>) => {
+      setUser((currentUser) => {
+        if (!currentUser) return null;
+        return { ...currentUser, ...updatedUserData };
+      });
+    };
+  
+    const value: AuthContextProps = {
+      user,
+      accessToken,
+      login,
+      logout,
+      register,
+      isLoading,
+      checkAuthStatus,
+      updateUserContext,
+    };
+  
+    return <AuthContext.Provider value={value}>{!isLoading ? children : <div className="flex min-h-screen items-center justify-center">Authenticating...</div>}</AuthContext.Provider>;
+  };
+  
+  export const useAuth = () => {
+    return useContext(AuthContext);
+  };
+  
