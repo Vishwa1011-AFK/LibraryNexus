@@ -24,14 +24,14 @@ export default function IssueBookPage() {
     const isbn = searchParams.get('isbn') || "N/A";
 
     const [userId, setUserId] = useState("")
-    const [issueDate, setIssueDate] = useState(format(new Date(), 'yyyy-MM-dd')) // Default to today
+    const [issueDate, setIssueDate] = useState(format(new Date(), 'yyyy-MM-dd')) 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (!bookId) {
             toast({ title: "Error", description: "No book selected for issuing.", variant: "destructive" });
-            router.replace('/admin'); // Go back if no book ID
+            router.replace('/admin'); 
         }
     }, [bookId, router, toast]);
 
@@ -60,11 +60,10 @@ export default function IssueBookPage() {
             const payload = {
                 bookId: bookId,
                 userId: userId.trim(),
-                issueDate: new Date(issueDate).toISOString() // Send ISO string to backend
+                issueDate: new Date(issueDate).toISOString() 
             };
-            const response = await apiClient<ApiResponseWithMessage>('/admin/loans', 'POST', payload); // Adjust endpoint if needed
-            toast({ title: "Success", description: response.message || `Book "${bookTitle}" issued successfully to User ${userId}.` });
-            router.push(`/admin/books/${bookId}`); // Go back to book detail page
+            const response = await apiClient<ApiResponseWithMessage>(`/api/admin/loans/issue/${bookId}`, 'POST', { userId: payload.userId, issueDate: payload.issueDate });            toast({ title: "Success", description: response.message || `Book "${bookTitle}" issued successfully to User ${userId}.` });
+            router.push(`/admin/books/${bookId}`);
 
         } catch (err: any) {
              const message = err.message || "Failed to issue book. Please check User ID and try again.";
