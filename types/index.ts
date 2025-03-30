@@ -18,7 +18,6 @@ export interface AuthUser extends User {
 export interface Book {
   id: string;
   _id?: string;
-  status?: "Available" | "Unavailable";
   added?: string | Date;
   title: string;
   author: string;

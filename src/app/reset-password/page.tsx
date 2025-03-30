@@ -12,6 +12,7 @@ import { Mail, Key, Lock } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 
 function ResetPasswordForm() {
     const router = useRouter();
@@ -75,7 +76,7 @@ function ResetPasswordForm() {
         <Card className="border-border w-full">
             <CardHeader>
                 <CardTitle>Reset Your Password</CardTitle>
-                <CardDescription>Enter the OTP sent to your email ({email || '...'}) and choose a new password.</CardDescription>
+                <CardDescription>Enter the 8-character OTP sent to your email ({email || '...'}) and choose a new password.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-4">
@@ -88,12 +89,25 @@ function ResetPasswordForm() {
                         {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-1">
-                        <Label htmlFor="otp" className={cn(errors.otp && "text-destructive")}>Verification Code (OTP)</Label>
-                        <div className="relative">
-                            <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                            <Input id="otp" type="text" maxLength={8} value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="Enter 8-character code" required disabled={isLoading} className={cn("pl-10", errors.otp && "border-destructive")} />
-                        </div>
-                        {errors.otp && <p className="text-sm text-destructive">{errors.otp}</p>}
+                         <Label htmlFor="otp" className={cn("block mb-2", errors.otp && "text-destructive")}>Verification Code (OTP)</Label>
+                         <div className="flex justify-center">
+                             <InputOTP maxLength={8} value={otp} onChange={(value) => setOtp(value)}>
+                                <InputOTPGroup>
+                                    <InputOTPSlot index={0} />
+                                    <InputOTPSlot index={1} />
+                                    <InputOTPSlot index={2} />
+                                    <InputOTPSlot index={3} />
+                                </InputOTPGroup>
+                                 <InputOTPSeparator />
+                                <InputOTPGroup>
+                                    <InputOTPSlot index={4} />
+                                    <InputOTPSlot index={5} />
+                                    <InputOTPSlot index={6} />
+                                    <InputOTPSlot index={7} />
+                                </InputOTPGroup>
+                            </InputOTP>
+                         </div>
+                         {errors.otp && <p className="text-sm text-destructive text-center mt-1">{errors.otp}</p>}
                     </div>
                     <div className="space-y-1">
                         <Label htmlFor="new-password" className={cn(errors.password && "text-destructive")}>New Password</Label>
@@ -115,8 +129,9 @@ function ResetPasswordForm() {
                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleResetPassword} disabled={isLoading}>{isLoading ? "Resetting..." : "Reset Password"}</Button>
                 </div>
             </CardContent>
-            <CardFooter className="flex justify-center border-t pt-4">
-                <Link href="/signin" className="text-sm text-primary hover:underline"> Back to Sign In </Link>
+            <CardFooter className="flex flex-col space-y-2 border-t pt-4">
+                 <Link href="/account/forgot-password" className="text-sm text-primary hover:underline"> Request new code </Link>
+                 <Link href="/signin" className="text-sm text-primary hover:underline"> Back to Sign In </Link>
             </CardFooter>
         </Card>
     );

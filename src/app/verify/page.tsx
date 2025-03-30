@@ -8,21 +8,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { apiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 
 export default function VerifyAccount() {
-    const [verificationCode, setVerificationCode] = useState<string[]>(Array(6).fill(""));
+    const [otp, setOtp] = useState("");
     const [isLoadingVerify, setIsLoadingVerify] = useState(false);
     const [isLoadingResend, setIsLoadingResend] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [email, setEmail] = useState<string | null>(null);
     const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
 
-    const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const router = useRouter();
     const { toast } = useToast();
 
     useEffect(() => {
-        const storedEmail = localStorage.getItem('verificationEmail');
+        const storedEmail = localStorage.getItem('verificationEmail') || new URLSearchParams(window.location.search).get('email');
         if (storedEmail) {
             setEmail(storedEmail);
             const parts = storedEmail.split('@');
@@ -32,79 +32,27 @@ export default function VerifyAccount() {
                 setMaskedEmail('your email address');
             }
         } else {
-            setError("Could not find email address for verification. Please sign up again.");
+            setError("Could not find email address for verification. Please sign up again or check the link.");
             toast({ title: "Error", description: "Email address not found for verification.", variant: "destructive" });
         }
-        inputRefs.current[0]?.focus();
-    }, []);
+    }, [toast]);
 
-    useEffect(() => {
-        inputRefs.current = inputRefs.current.slice(0, 6);
-    }, []);
-
-    const handleInputChange = (index: number, value: string) => {
-        const digit = value.match(/^[0-9]$/);
-        if (value === "" || digit) {
-            const newCode = [...verificationCode];
-            newCode[index] = value;
-            setVerificationCode(newCode);
-            if (digit && index < 5) {
-                inputRefs.current[index + 1]?.focus();
-            }
-        }
-    };
-
-    const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Backspace") {
-            e.preventDefault();
-            const newCode = [...verificationCode];
-            if (newCode[index] !== "") {
-                newCode[index] = "";
-                setVerificationCode(newCode);
-            } else if (index > 0) {
-                inputRefs.current[index - 1]?.focus();
-                newCode[index - 1] = "";
-                setVerificationCode(newCode);
-            }
-        } else if (e.key === 'ArrowLeft' && index > 0) {
-            inputRefs.current[index - 1]?.focus();
-        } else if (e.key === 'ArrowRight' && index < 5) {
-            inputRefs.current[index + 1]?.focus();
-        }
-    };
-
-    const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-        e.preventDefault();
-        const paste = e.clipboardData.getData('text').replace(/[^0-9]/g, '');
-        if (paste.length === 6) {
-            const newCode = paste.split('');
-            setVerificationCode(newCode);
-            inputRefs.current[5]?.focus();
-        } else if (paste.length > 0) {
-            const newCode = Array(6).fill('');
-            paste.split('').slice(0, 6).forEach((char, index) => {
-                newCode[index] = char;
-            });
-            setVerificationCode(newCode);
-            inputRefs.current[Math.min(5, paste.length)]?.focus();
-        }
-    };
 
     const handleVerify = async () => {
         if (!email) {
             toast({ title: "Error", description: "Email address not found.", variant: "destructive" });
             return;
         }
-        const code = verificationCode.join("");
-        if (code.length !== 6) {
-            setError("Please enter the complete 6-digit code.");
-            toast({ title: "Incomplete Code", description: "Please enter the complete 6-digit code.", variant: "destructive"});
+
+        if (otp.length !== 8) {
+            setError("Please enter the complete 8-character code.");
+            toast({ title: "Incomplete Code", description: "Please enter the complete 8-character code.", variant: "destructive"});
             return;
         }
         setError(null);
         setIsLoadingVerify(true);
         try {
-            await apiClient('/auth/verify-signup', 'POST', { email, otp: code });
+            await apiClient('/auth/verify-signup', 'POST', { email, otp: otp.toUpperCase() });
             toast({ title: "Success!", description: "Your account has been verified. Please sign in." });
             localStorage.removeItem('verificationEmail');
             router.replace('/signin');
@@ -128,8 +76,7 @@ export default function VerifyAccount() {
         try {
             await apiClient('/auth/signup-otp', 'POST', { email });
             toast({ title: "Code Resent", description: "A new verification code has been sent to your email." });
-            setVerificationCode(Array(6).fill(""));
-            inputRefs.current[0]?.focus();
+            setOtp("");
         } catch (error: any) {
             console.error("Failed to resend code:", error);
             const message = error.message || "Failed to resend code. Please try again later.";
@@ -144,12 +91,51 @@ export default function VerifyAccount() {
         <div className="flex min-h-screen flex-col">
             <SiteHeader/>
             <main className="flex-1 flex flex-col items-center justify-center py-12">
-                <div className="max-w-md w-full mx-auto px-4">
-                    <h1 className="text-3xl font-bold text-center mb-4">Verify your account</h1>
-                    <p className="text-center text-muted-foreground mb-8">
-                        A verification code was sent to {maskedEmail || 'your email address'}.
-                        Enter the code below to confirm your account.
+                <div className="max-w-md w-full mx-auto px-4 text-center">
+                    <h1 className="text-3xl font-bold mb-4">Verify your account</h1>
+                    <p className="text-muted-foreground mb-8">
+                        An 8-character verification code was sent to {maskedEmail || 'your email address'}.
+                        Enter the code below.
                     </p>
+
+                     <div className="flex justify-center mb-6">
+                         <InputOTP maxLength={8} value={otp} onChange={(value) => setOtp(value)}>
+                            <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={1} />
+                                <InputOTPSlot index={2} />
+                                <InputOTPSlot index={3} />
+                            </InputOTPGroup>
+                             <InputOTPSeparator />
+                            <InputOTPGroup>
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
+                                <InputOTPSlot index={6} />
+                                <InputOTPSlot index={7} />
+                            </InputOTPGroup>
+                        </InputOTP>
+                     </div>
+
+
+                    {error && <p className="text-destructive text-sm mb-4">{error}</p>}
+
+                    <Button
+                        onClick={handleVerify}
+                        disabled={isLoadingVerify || otp.length !== 8}
+                        className="w-full mb-4"
+                        size="lg"
+                    >
+                        {isLoadingVerify ? "Verifying..." : "Verify Account"}
+                    </Button>
+
+                    <Button
+                        variant="link"
+                        onClick={handleResend}
+                        disabled={isLoadingResend || !email}
+                        className="text-primary"
+                    >
+                        {isLoadingResend ? "Sending..." : "Didn't receive code? Resend"}
+                    </Button>
                 </div>
             </main>
         </div>
