@@ -9,7 +9,7 @@ import { FormField } from "@/components/ui/form-field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { User, Mail, Lock, Calendar } from "lucide-react"
+import { User, Mail, Lock, Calendar, ShieldCheck } from "lucide-react"
 import { apiClient } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 import { type SignupPayload } from "@/types"
@@ -24,6 +24,7 @@ export default function SignUp() {
     const [password, setPassword] = useState("")
     const [confirmPassword, setConfirmPassword] = useState("")
     const [birthDate, setBirthDate] = useState("")
+    const [adminCode, setAdminCode] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({})
     const router = useRouter()
     const { toast } = useToast()
@@ -73,11 +74,13 @@ export default function SignUp() {
             lastName: lastName.trim(),
             email: email.trim().toLowerCase(),
             password: password,
-            birthDate: parse(birthDate, 'yyyy-MM-dd', new Date()).toISOString()
+            birthDate: parse(birthDate, 'yyyy-MM-dd', new Date()).toISOString(),
+            adminCode: adminCode.trim() || undefined,
         }
 
         try {
             await apiClient('/auth/signup', 'POST', payload)
+
             try {
                 await apiClient('/auth/signup-otp', 'POST', { email: payload.email })
                 toast({ title: "Account Created!", description: "Please check your email to verify your account." })
@@ -85,7 +88,7 @@ export default function SignUp() {
                 router.push("/verify")
             } catch (otpError: any) {
                 setErrors({ form: `Account created, but failed to send verification email: ${otpError.message || "Failed to send verification email."}` })
-                toast({ title: "OTP Error", description: `Account created, but failed to send verification email: ${otpError.message}.`, variant: "destructive" })
+                toast({ title: "OTP Error", description: `Account created, but failed to send verification email: ${otpError.message}. Please try verifying later or contact support.`, variant: "destructive" })
             }
         } catch (error: any) {
             setErrors({ form: error.message || "Registration failed. Please try again." })
@@ -116,14 +119,25 @@ export default function SignUp() {
                                 <FormField
                                     id="birthDate"
                                     label="Date of Birth"
-                                    type="date" 
+                                    type="date"
                                     value={birthDate}
                                     onChange={(e) => setBirthDate(e.target.value)}
-                                    placeholder="YYYY-MM-DD" 
+                                    placeholder="YYYY-MM-DD"
                                     error={errors.birthDate}
                                     icon={<Calendar className="h-4 w-4" />}
                                     required
                                 />
+                                <FormField
+                                    id="adminCode"
+                                    label="Admin Code"
+                                    type="password"
+                                    value={adminCode}
+                                    onChange={(e) => setAdminCode(e.target.value)}
+                                    placeholder="Optional: Enter if provided"
+                                    error={errors.adminCode}
+                                    icon={<ShieldCheck className="h-4 w-4" />}
+                                />
+
                                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg mt-4" onClick={handleSignUp} disabled={isLoading}>{isLoading ? "Creating Account..." : "Sign Up"}</Button>
                             </div>
                         </CardContent>

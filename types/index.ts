@@ -85,6 +85,7 @@ lastName: string;
 email: string;
 password?: string;
 birthDate?: string;
+adminCode?: string;
 }
 
 export interface ReadingHistoryItem {
