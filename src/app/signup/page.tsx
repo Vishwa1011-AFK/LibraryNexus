@@ -113,6 +113,17 @@ export default function SignUp() {
                                 <FormField id="email" label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" error={errors.email} icon={<Mail className="h-4 w-4" />} required />
                                 <FormField id="password" label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Create a password (min. 8 characters)" error={errors.password} icon={<Lock className="h-4 w-4" />} required />
                                 <FormField id="confirm-password" label="Confirm Password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm your password" error={errors.confirmPassword} icon={<Lock className="h-4 w-4" />} required />
+                                <FormField
+                                    id="birthDate"
+                                    label="Date of Birth"
+                                    type="date" 
+                                    value={birthDate}
+                                    onChange={(e) => setBirthDate(e.target.value)}
+                                    placeholder="YYYY-MM-DD" 
+                                    error={errors.birthDate}
+                                    icon={<Calendar className="h-4 w-4" />}
+                                    required
+                                />
                                 <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 py-6 text-lg mt-4" onClick={handleSignUp} disabled={isLoading}>{isLoading ? "Creating Account..." : "Sign Up"}</Button>
                             </div>
                         </CardContent>
