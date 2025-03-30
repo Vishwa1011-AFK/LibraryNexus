@@ -37,7 +37,7 @@ export default function BookDetail() {
       setIsLoading(true);
       setError(null);
       try {
-        const fetchedBook = await apiClient<Book>(`/api/books/${bookId}`);
+        const fetchedBook = await apiClient<Book>(`/books/${bookId}`);
         setBook(fetchedBook);
       } catch (err: any) {
         setError(err.message || "Failed to load book details.");
@@ -58,7 +58,7 @@ export default function BookDetail() {
     if (!book) return;
     setIsWishlistLoading(true);
     try {
-      await apiClient(`/api/users/wishlist/me/${book.id}`, "POST");
+      await apiClient(`/users/wishlist/me/${book.id}`, "POST");
       toast({ title: "Success", description: `${book.title} added to your wishlist.` });
     } catch (err: any) {
       const message = err.message?.includes("already in wishlist")

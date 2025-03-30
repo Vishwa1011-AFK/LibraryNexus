@@ -67,7 +67,7 @@ export default function BooksPage() {
         const queryString = buildQueryParams();
 
         try {
-            const data = await apiClient<BooksApiResponse>(`/api/books?${queryString}`);
+            const data = await apiClient<BooksApiResponse>(`/books?${queryString}`);
             setBooks(data.books || []);
             setTotalPages(data.totalPages || 1);
             setTotalBooksCount(data.total || 0);
@@ -91,7 +91,7 @@ export default function BooksPage() {
 
     const fetchCategories = useCallback(async () => {
         try {
-            const cats = await apiClient<string[]>('/api/categories');
+            const cats = await apiClient<string[]>('/categories');
             setCategories(cats || []);
         } catch (err) {
             console.error("Failed to fetch categories:", err);
