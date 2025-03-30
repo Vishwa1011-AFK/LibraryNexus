@@ -1,5 +1,6 @@
 export interface User {
   id: string;
+  _id?: string;
   role: 'student' | 'admin';
   firstName: string;
   middleName?: string;
@@ -7,6 +8,7 @@ export interface User {
   email: string;
   email_verified?: boolean;
   birthDate?: string | Date;
+  recentLoans?: any[];
 }
 
 export interface AuthUser extends User {
@@ -16,6 +18,8 @@ export interface AuthUser extends User {
 export interface Book {
   id: string;
   _id?: string;
+  status?: "Available" | "Unavailable";
+  added?: string | Date;
   title: string;
   author: string;
   isbn: string;
@@ -124,8 +128,8 @@ export interface SignInResponse {
 export interface AdminStats {
   totalBooks: number;
   activeBorrows: number;
-  overdueBooks: number;
-  newBooksMonthly: number;
+  overdue: number;
+  newThisMonth: number;
 }
 
 export interface AdminIssueHistoryItem {
@@ -151,4 +155,11 @@ export interface ApiResponseWithMessage {
   success: boolean;
   message: string;
   [key: string]: any; 
+}
+
+export interface AdminUsersApiResponse {
+  users: User[];
+  total: number;
+  page: number;
+  totalPages: number;
 }

@@ -183,14 +183,14 @@ export default function AdminBookDetail() {
                                     <p className="text-xs sm:text-sm text-muted-foreground">ISBN: {book.isbn}</p>
                                 </div>
                                 <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                        toast({title: "TODO", description: "Implement Edit Book UI/Modal"});
-                                    }}
-                                >
-                                    <Edit className="mr-1.5 h-4 w-4"/> Edit
-                                </Button>
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                      router.push(`/admin/books/${book.id}/edit`); 
+                                  }}
+                              >
+                                  <Edit className="mr-1.5 h-4 w-4"/> Edit
+                              </Button>
                             </div>
 
                             <p className="text-md sm:text-lg font-semibold mb-4 sm:mb-1">
