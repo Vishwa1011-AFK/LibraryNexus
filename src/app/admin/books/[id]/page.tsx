@@ -1,19 +1,31 @@
-"use client"
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image"
 import Link from "next/link"
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { SiteHeader } from "@/components/site-header"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { DataTable } from "@/components/ui/data-table"
 import { Badge } from "@/components/ui/badge"
-import { Book, FileText, Globe, ArrowLeft, Edit, BookUp, BookOpen, Calendar } from "lucide-react"
+import { Book, FileText, Globe, ArrowLeft, Edit, BookUp, BookOpen, Calendar, Undo2 } from "lucide-react"
+import { useAuth } from "@/context/auth-context";
 import { apiClient } from "@/lib/api";
-import { type Book as BookType, type AdminIssueHistoryItem } from "@/types";
+import { type Book as BookType, type AdminIssueHistoryItem, type ApiResponseWithMessage } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from 'date-fns';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function AdminBookDetail() {
     const params = useParams();
@@ -27,9 +39,10 @@ export default function AdminBookDetail() {
     const [book, setBook] = useState<BookType | null>(null);
     const [isLoadingBook, setIsLoadingBook] = useState(true);
     const [errorBook, setErrorBook] = useState<string | null>(null);
+    const [isReturningLoanId, setIsReturningLoanId] = useState<string | null>(null);
 
     const fetchBookDetails = useCallback(async () => {
-        if (!bookId) return;
+         if (!bookId) return;
         setIsLoadingBook(true);
         setErrorBook(null);
         try {
@@ -48,8 +61,22 @@ export default function AdminBookDetail() {
         fetchBookDetails();
     }, [fetchBookDetails]);
 
+    const handleReturnBook = async (loanId: string) => {
+        setIsReturningLoanId(loanId);
+        try {
+            const response = await apiClient<ApiResponseWithMessage>(`/api/admin/loans/return/${loanId}`, 'POST', {});
+            toast({ title: "Success", description: response.message || `Loan ID ${loanId} marked as returned.` });
+            fetchBookDetails();
+        } catch (err: any) {
+             toast({ title: "Error Returning Book", description: err.message, variant: "destructive" });
+        } finally {
+             setIsReturningLoanId(null);
+        }
+    };
+
+
     const formatDate = (dateInput: string | Date | undefined): string => {
-        if (!dateInput) return 'N/A';
+         if (!dateInput) return 'N/A';
         try {
             return format(new Date(dateInput), 'PPpp');
         } catch {
@@ -59,48 +86,75 @@ export default function AdminBookDetail() {
 
     const issueHistoryColumns: { key: string; header: string; cell: (item: AdminIssueHistoryItem) => React.ReactNode; sortable?: boolean }[] = [
         {
-            key: "id",
-            header: "Loan ID",
-            cell: (item: AdminIssueHistoryItem) => item.id,
+            key: "id", header: "Loan ID", cell: (item) => <span className="text-xs">{item.id}</span>,
         },
         {
-            key: "userId",
-            header: "User",
-            cell: (item: AdminIssueHistoryItem) => item.userName || item.userEmail || item.userId,
+            key: "userId", header: "User", cell: (item) => item.userName || item.userEmail || item.userId,
         },
         {
-            key: "issuedOn",
-            header: "Issued On",
-            cell: (item: AdminIssueHistoryItem) => formatDate(item.issuedOn),
-            sortable: true,
+            key: "issuedOn", header: "Issued", cell: (item) => formatDate(item.issuedOn), sortable: true,
         },
         {
-            key: "submissionDate",
-            header: "Due Date",
-            cell: (item: AdminIssueHistoryItem) => formatDate(item.submissionDate),
-            sortable: true,
+            key: "submissionDate", header: "Due", cell: (item) => formatDate(item.submissionDate), sortable: true,
         },
         {
-            key: "returnedDate",
-            header: "Returned On",
-            cell: (item: AdminIssueHistoryItem) => item.returnedDate ? formatDate(item.returnedDate) : '-',
-            sortable: true,
+            key: "returnedDate", header: "Returned", cell: (item) => item.returnedDate ? formatDate(item.returnedDate) : '-', sortable: true,
         },
         {
-            key: "status",
-            header: "Status",
-            cell: (item: AdminIssueHistoryItem) => {
-                const status = item.status;
+            key: "status", header: "Status", cell: (item) => {
+                 const status = item.status;
                 let variant: "success" | "destructive" | "warning" | "default" = "default";
                 if (status === 'Returned' || status === 'Submitted') variant = 'success';
                 else if (status === 'Issued') variant = 'default';
                 else if (status === 'Overdue') variant = 'destructive';
-                return <Badge variant={variant}>{status}</Badge>;
-            }
+                return <Badge variant={variant} className="text-xs">{status}</Badge>;
+             }
         },
+        {
+            key: "actions",
+            header: "Actions",
+            cell: (item: AdminIssueHistoryItem) => {
+                const canReturn = item.status === 'Issued' || item.status === 'Overdue';
+                const isLoadingThis = isReturningLoanId === item.id;
+
+                return canReturn ? (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                             <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2"
+                                disabled={isLoadingThis}
+                                aria-label="Mark as Returned"
+                            >
+                                <Undo2 className="mr-1 h-3 w-3" />
+                                {isLoadingThis ? 'Returning...' : 'Return'}
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Confirm Book Return</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Are you sure you want to mark this loan (ID: {item.id}) as returned? This will update the book's availability.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleReturnBook(item.id)}>
+                                    Confirm Return
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+
+                ) : (
+                    <span className="text-xs text-muted-foreground">-</span>
+                );
+            }
+        }
     ];
 
-    if (isLoadingBook) {
+     if (isLoadingBook) {
         return (
             <div className="flex min-h-screen flex-col">
                 <SiteHeader/>
@@ -126,7 +180,8 @@ export default function AdminBookDetail() {
         );
     }
 
-    if (errorBook || !book) {
+
+      if (errorBook || !book) {
         return (
             <div className="flex min-h-screen flex-col">
                 <SiteHeader/>
@@ -144,18 +199,20 @@ export default function AdminBookDetail() {
         );
     }
 
+
     return (
         <div className="flex min-h-screen flex-col">
             <SiteHeader/>
             <main className="flex-1 py-8">
                 <div className="container mx-auto px-4">
-                    <div className="mb-6">
+                     <div className="mb-6">
                         <Button variant="outline" size="sm" onClick={() => router.push('/admin')}>
                             <ArrowLeft className="mr-2 h-4 w-4"/> Back to Books List
                         </Button>
                     </div>
 
-                    <div className="grid md:grid-cols-[300px_1fr] gap-8 mb-12">
+
+                     <div className="grid md:grid-cols-[300px_1fr] gap-8 mb-12">
                         <div>
                             <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg shadow-md">
                                 <Image
@@ -183,14 +240,14 @@ export default function AdminBookDetail() {
                                     <p className="text-xs sm:text-sm text-muted-foreground">ISBN: {book.isbn}</p>
                                 </div>
                                 <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                      router.push(`/admin/books/${book.id}/edit`); 
-                                  }}
-                              >
-                                  <Edit className="mr-1.5 h-4 w-4"/> Edit
-                              </Button>
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        router.push(`/admin/books/${book.id}/edit`);
+                                    }}
+                                >
+                                    <Edit className="mr-1.5 h-4 w-4"/> Edit
+                                </Button>
                             </div>
 
                             <p className="text-md sm:text-lg font-semibold mb-4 sm:mb-1">
@@ -199,7 +256,10 @@ export default function AdminBookDetail() {
 
                             <div className="flex flex-wrap gap-4 my-6">
                                 <Link href={`/admin/issue?bookId=${book.id}&title=${encodeURIComponent(book.title)}&isbn=${book.isbn}`}>
-                                    <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                                    <Button
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                        disabled={!book.available}
+                                        >
                                         <BookUp className="mr-2 h-4 w-4"/> Issue This Book
                                     </Button>
                                 </Link>
@@ -210,7 +270,7 @@ export default function AdminBookDetail() {
                             </p>
 
                             <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
-                                <div className="flex items-center gap-1.5 p-2 border rounded-md bg-muted/50">
+                                 <div className="flex items-center gap-1.5 p-2 border rounded-md bg-muted/50">
                                     <FileText className="h-4 w-4 text-primary shrink-0" />
                                     <span>{book.pages ? `${book.pages} Pages` : 'N/A'}</span>
                                 </div>
@@ -227,12 +287,14 @@ export default function AdminBookDetail() {
                                     <span>Pub: {book.publishDate ? format(new Date(book.publishDate), 'PP') : 'N/A'}</span>
                                 </div>
                                 <div className="flex items-center gap-1.5 p-2 border rounded-md bg-muted/50">
-                                    <span>Pub: {book.publisher || 'N/A'}</span>
+                                    <span>Publisher: {book.publisher || 'N/A'}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
+
+                    {/* Issue History Section */}
                     <div>
                         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                             <Book className="h-5 w-5 text-primary" />
