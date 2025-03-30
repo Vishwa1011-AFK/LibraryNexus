@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import Link from "next/link"
+import Image from "next/image"
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Trash2, Search, BookOpen, Heart } from "lucide-react"
@@ -9,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { useAuth } from "@/context/auth-context"
 import { apiClient } from "@/lib/api"
-import { type BorrowedBook, type WishlistItem, type WishlistApiResponse } from "@/types"
+import { type WishlistItem, type WishlistApiResponse } from "@/types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useToast } from "@/hooks/use-toast"
 import { format } from 'date-fns';
@@ -18,32 +20,17 @@ export default function WishlistPage() {
     const { user, isLoading: authLoading } = useAuth();
     const { toast } = useToast();
 
-    const [borrowedBooks, setBorrowedBooks] = useState<BorrowedBook[]>([]);
     const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
-    const [isLoadingBorrowed, setIsLoadingBorrowed] = useState(true);
     const [isLoadingWishlist, setIsLoadingWishlist] = useState(true);
-    const [errorBorrowed, setErrorBorrowed] = useState<string | null>(null);
     const [errorWishlist, setErrorWishlist] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("")
 
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchWishlist = async () => {
             if (!user) {
-                setIsLoadingBorrowed(false);
                 setIsLoadingWishlist(false);
                 return;
             }
-
-            setIsLoadingBorrowed(true);
-            setErrorBorrowed(null);
-            apiClient<BorrowedBook[]>('/users/me/borrowed-books')
-                .then(data => setBorrowedBooks(data || []))
-                .catch(err => {
-                    console.error("Failed to fetch borrowed books:", err);
-                    setErrorBorrowed(err.message || "Failed to load borrowed books.");
-                    toast({ title: "Error Loading Borrowed Books", description: err.message || "Could not load borrowed books.", variant: "destructive" });
-                })
-                .finally(() => setIsLoadingBorrowed(false));
 
             setIsLoadingWishlist(true);
             setErrorWishlist(null);
@@ -58,23 +45,12 @@ export default function WishlistPage() {
         };
 
         if (!authLoading && user) {
-            fetchData();
+            fetchWishlist();
         } else if (!authLoading && !user) {
-            setIsLoadingBorrowed(false);
             setIsLoadingWishlist(false);
-            setBorrowedBooks([]);
             setWishlistItems([]);
         }
     }, [user, authLoading, toast]);
-
-    const filteredBorrowedBooks = useMemo(() => {
-        if (!searchQuery) return borrowedBooks;
-        const lowerCaseQuery = searchQuery.toLowerCase();
-        return borrowedBooks.filter(item =>
-            item.book?.title?.toLowerCase().includes(lowerCaseQuery) ||
-            item.book?.isbn?.includes(lowerCaseQuery)
-        );
-    }, [borrowedBooks, searchQuery]);
 
     const filteredWishlist = useMemo(() => {
         if (!searchQuery) return wishlistItems;
@@ -98,14 +74,14 @@ export default function WishlistPage() {
         } catch (err: any) {
             console.error("Failed to remove from wishlist:", err);
             toast({ title: "Error", description: err.message || `Failed to remove ${bookTitle}.`, variant: "destructive" });
-            setWishlistItems(originalWishlist);
+            setWishlistItems(originalWishlist); // Revert on error
         }
     };
 
     const formatDate = (dateInput: string | Date | undefined): string => {
         if (!dateInput) return 'N/A';
         try {
-            return format(new Date(dateInput), 'PP');
+            return format(new Date(dateInput), 'PP'); // 'MMM d, yyyy'
         } catch {
             return 'Invalid Date';
         }
@@ -124,17 +100,100 @@ export default function WishlistPage() {
         return (
             <div className="flex min-h-screen flex-col">
                 <SiteHeader />
-                <main className="flex-1 flex items-center justify-center">Please log in to view your wishlist and borrowed books.</main>
+                <main className="flex-1 flex items-center justify-center">Please log in to view your wishlist.</main>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
+        <div className="flex min-h-screen flex-col">
             <SiteHeader />
             <main className="flex-1 py-8">
-                <div className="container mx-auto px-4">
+                <div className="container mx-auto px-4 max-w-6xl">
                     <UserInfoHeader name={`${user.firstName} ${user.lastName}`} email={user.email} isAdmin={user.isAdmin} />
+
+                    <div className="mb-8">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                             <h1 className="text-3xl font-bold flex items-center gap-2 mb-2 md:mb-0">
+                                <Heart className="h-6 w-6 text-primary"/> My Wishlist
+                                {!isLoadingWishlist && <span className="text-lg font-normal text-muted-foreground">({filteredWishlist.length})</span>}
+                             </h1>
+                            <div className="relative w-full md:w-1/3">
+                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search wishlist..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-10"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="rounded-md border">
+                            {isLoadingWishlist ? (
+                                <div className="space-y-2 p-4">
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                    <Skeleton className="h-12 w-full" />
+                                </div>
+                             ) : errorWishlist ? (
+                                 <p className="text-center text-destructive py-10">{errorWishlist}</p>
+                             ) : filteredWishlist.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[80px] hidden sm:table-cell"></TableHead>
+                                            <TableHead>Book Details</TableHead>
+                                            <TableHead className="hidden md:table-cell">Category</TableHead>
+                                            <TableHead className="hidden lg:table-cell">Added On</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {filteredWishlist.map((item) => (
+                                            <TableRow key={item.id}>
+                                                <TableCell className="hidden sm:table-cell">
+                                                    <Link href={`/books/${item.id}`}>
+                                                         <Image
+                                                             src={item.coverUrl || "/placeholder.svg"}
+                                                             alt={item.title}
+                                                             width={50}
+                                                             height={75}
+                                                             className="rounded-sm object-cover aspect-[2/3]"
+                                                         />
+                                                     </Link>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Link href={`/books/${item.id}`} className="font-medium hover:underline">
+                                                        {item.title}
+                                                    </Link>
+                                                    <p className="text-sm text-muted-foreground">{item.author}</p>
+                                                    <p className="text-xs text-muted-foreground md:hidden">{item.category || 'N/A'}</p>
+                                                </TableCell>
+                                                <TableCell className="hidden md:table-cell">{item.category || 'N/A'}</TableCell>
+                                                <TableCell className="hidden lg:table-cell">{formatDate(item.addedAt)}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleRemoveFromWishlist(item.id, item.title)}
+                                                        aria-label="Remove from wishlist"
+                                                    >
+                                                        <Trash2 className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            ) : (
+                                <p className="text-center text-muted-foreground py-10">
+                                    {searchQuery ? 'No items match your search.' : 'Your wishlist is empty.'}
+                                </p>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </main>
         </div>

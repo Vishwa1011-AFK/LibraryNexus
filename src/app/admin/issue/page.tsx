@@ -1,125 +1,146 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useSearchParams, useRouter } from 'next/navigation';
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { User, Calendar, ArrowLeft } from "lucide-react"
+import { useToast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api";
+import { type ApiResponseWithMessage } from "@/types";
+import { format } from 'date-fns';
 
 export default function IssueBookPage() {
-  const [bookTitle, setBookTitle] = useState("The Master Algorithm")
-  const [isbn, setIsbn] = useState("12343278")
-  const [userId, setUserId] = useState("")
-  const [issueDate, setIssueDate] = useState("")
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const { toast } = useToast();
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader/>
-      <main className="flex-1 py-8">
-        <div className="container mx-auto px-4 max-w-3xl">
-          <div className="mb-8">
-            <div className="flex items-center mb-4">
-              <span className="text-xl font-medium">Book :</span>
-              <span className="ml-4 text-xl">{bookTitle}</span>
-            </div>
+    const bookId = searchParams.get('bookId');
+    const bookTitle = searchParams.get('title') || "Selected Book";
+    const isbn = searchParams.get('isbn') || "N/A";
 
-            <div className="flex items-center">
-              <span className="text-xl font-medium">ISBN :</span>
-              <span className="ml-4 text-xl text-primary">{isbn}</span>
-            </div>
-          </div>
+    const [userId, setUserId] = useState("")
+    const [issueDate, setIssueDate] = useState(format(new Date(), 'yyyy-MM-dd')) // Default to today
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-          <div className="bg-card rounded-lg p-6 mb-6">
-            <h2 className="text-2xl font-bold mb-6">Issue to</h2>
+    useEffect(() => {
+        if (!bookId) {
+            toast({ title: "Error", description: "No book selected for issuing.", variant: "destructive" });
+            router.replace('/admin'); // Go back if no book ID
+        }
+    }, [bookId, router, toast]);
 
-            <div className="space-y-6">
-              <div className="flex items-center">
-                <div className="flex items-center space-x-2 w-48">
-                  <span className="text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-user"
-                    >
-                      <circle cx="12" cy="8" r="5" />
-                      <path d="M20 21a8 8 0 0 0-16 0" />
-                    </svg>
-                  </span>
-                  <label htmlFor="user-id" className="text-lg">
-                    User Id
-                  </label>
+
+    const handleIssueBook = async () => {
+        setError(null);
+        if (!userId.trim()) {
+            setError("User ID is required.");
+            toast({ title: "Validation Error", description: "Please enter the User ID.", variant: "destructive" });
+            return;
+        }
+        if (!issueDate) {
+            setError("Issue Date is required.");
+             toast({ title: "Validation Error", description: "Please select an Issue Date.", variant: "destructive" });
+            return;
+        }
+        if (!bookId) {
+             setError("Book ID is missing.");
+             toast({ title: "Error", description: "Cannot issue book without a Book ID.", variant: "destructive" });
+            return;
+        }
+
+
+        setIsLoading(true);
+        try {
+            const payload = {
+                bookId: bookId,
+                userId: userId.trim(),
+                issueDate: new Date(issueDate).toISOString() // Send ISO string to backend
+            };
+            const response = await apiClient<ApiResponseWithMessage>('/admin/loans', 'POST', payload); // Adjust endpoint if needed
+            toast({ title: "Success", description: response.message || `Book "${bookTitle}" issued successfully to User ${userId}.` });
+            router.push(`/admin/books/${bookId}`); // Go back to book detail page
+
+        } catch (err: any) {
+             const message = err.message || "Failed to issue book. Please check User ID and try again.";
+             setError(message);
+             toast({ title: "Issuing Failed", description: message, variant: "destructive" });
+        } finally {
+             setIsLoading(false);
+        }
+    };
+
+
+    return (
+        <div className="flex min-h-screen flex-col">
+        <SiteHeader/>
+        <main className="flex-1 py-8">
+            <div className="container mx-auto px-4 max-w-2xl">
+                 <div className="mb-6">
+                    <Button variant="outline" size="sm" onClick={() => router.back()}>
+                        <ArrowLeft className="mr-2 h-4 w-4"/> Cancel Issuing
+                    </Button>
                 </div>
-                <span className="mx-4 text-xl">:</span>
-                <Input
-                  id="user-id"
-                  type="text"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  className="flex-1 bg-muted/50 border-muted"
-                />
-              </div>
 
-              <div className="flex items-center">
-                <div className="flex items-center space-x-2 w-48">
-                  <span className="text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="lucide lucide-calendar"
-                    >
-                      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                      <line x1="16" x2="16" y1="2" y2="6" />
-                      <line x1="8" x2="8" y1="2" y2="6" />
-                      <line x1="3" x2="21" y1="10" y2="10" />
-                    </svg>
-                  </span>
-                  <label htmlFor="issue-date" className="text-lg">
-                    Date of Issue
-                  </label>
-                </div>
-                <span className="mx-4 text-xl">:</span>
-                <Input
-                  id="issue-date"
-                  type="text"
-                  value={issueDate}
-                  onChange={(e) => setIssueDate(e.target.value)}
-                  className="flex-1 bg-muted/50 border-muted"
-                />
-              </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Issue Book</CardTitle>
+                        <CardDescription>Issue "{bookTitle}" (ISBN: {isbn}) to a user.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Label htmlFor="user-id">User ID</Label>
+                                <div className="relative">
+                                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                    <Input
+                                        id="user-id"
+                                        type="text"
+                                        value={userId}
+                                        onChange={(e) => setUserId(e.target.value)}
+                                        placeholder="Enter the borrower's User ID"
+                                        className="pl-10"
+                                        disabled={isLoading}
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="issue-date">Date of Issue</Label>
+                                 <div className="relative">
+                                     <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                                     <Input
+                                        id="issue-date"
+                                        type="date"
+                                        value={issueDate}
+                                        onChange={(e) => setIssueDate(e.target.value)}
+                                        className="pl-10"
+                                        disabled={isLoading}
+                                        required
+                                    />
+                                 </div>
+                            </div>
+
+                            {error && <p className="text-sm text-destructive text-center pt-2">{error}</p>}
+
+                            <Button
+                                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                                onClick={handleIssueBook}
+                                disabled={isLoading}
+                            >
+                                {isLoading ? "Issuing Book..." : "Confirm Issue"}
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <Button
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => console.log("Save clicked")}
-            >
-              Save
-            </Button>
-
-            <Link href="/admin/books">
-              <Button variant="outline" className="border-muted text-muted-foreground hover:text-foreground">
-                Cancel
-              </Button>
-            </Link>
-          </div>
+        </main>
         </div>
-      </main>
-    </div>
-  )
+    )
 }
-

@@ -1,243 +1,274 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link"
 import Image from "next/image"
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { SiteHeader } from "@/components/site-header"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import { apiClient } from "@/lib/api";
+import { type Book, type BooksApiResponse, type AdminStats } from "@/types";
 import {
   BookOpen,
-  Users,
-  BarChart3,
-  Settings,
   Plus,
   Search,
   ArrowUpDown,
   MoreHorizontal,
   Edit,
   Trash,
+  BookUp,
+  Clock,
+  AlertTriangle,
+  CalendarPlus,
 } from "lucide-react"
 
-// Sample books data for admin
-const books = [
-  {
-    id: 1,
-    title: "The Silent Patient",
-    author: "Alex Michaelides",
-    category: "Thriller",
-    added: "2023-01-15",
-    status: "Available",
-    borrows: 24,
-    coverUrl: "/placeholder.svg?height=120&width=80",
-  },
-  {
-    id: 2,
-    title: "Atomic Habits",
-    author: "James Clear",
-    category: "Self-Help",
-    added: "2023-01-10",
-    status: "Available",
-    borrows: 42,
-    coverUrl: "/placeholder.svg?height=120&width=80",
-  },
-  {
-    id: 3,
-    title: "The Midnight Library",
-    author: "Matt Haig",
-    category: "Fiction",
-    added: "2023-02-05",
-    status: "Available",
-    borrows: 18,
-    coverUrl: "/placeholder.svg?height=120&width=80",
-  },
-  {
-    id: 4,
-    title: "Project Hail Mary",
-    author: "Andy Weir",
-    category: "Sci-Fi",
-    added: "2023-02-20",
-    status: "Available",
-    borrows: 15,
-    coverUrl: "/placeholder.svg?height=120&width=80",
-  },
-  {
-    id: 5,
-    title: "The Four Winds",
-    author: "Kristin Hannah",
-    category: "Historical Fiction",
-    added: "2023-03-01",
-    status: "Unavailable",
-    borrows: 12,
-    coverUrl: "/placeholder.svg?height=120&width=80",
-  },
-]
 
 export default function AdminDashboard() {
-  return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
-      <div className="flex-1 flex">
-        <aside className="w-64 border-r border-border hidden md:block">
-          <div className="p-4">
-            <h2 className="font-semibold mb-4">Admin Panel</h2>
-            <nav className="space-y-1">
-              <Link href="/admin" className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted text-foreground">
-                <BookOpen className="h-4 w-4" />
-                <span>Books</span>
-              </Link>
-              <Link
-                href="/admin/users"
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-muted-foreground hover:bg-muted/50"
-              >
-                <Users className="h-4 w-4" />
-                <span>Users</span>
-              </Link>
-              <Link
-                href="/admin/analytics"
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-muted-foreground hover:bg-muted/50"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span>Analytics</span>
-              </Link>
-              <Link
-                href="/admin/settings"
-                className="flex items-center gap-2 px-3 py-2 rounded-md text-muted-foreground hover:bg-muted/50"
-              >
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </Link>
-            </nav>
-          </div>
-        </aside>
-        <main className="flex-1 p-4 md:p-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">Books Management</h1>
-                <p className="text-muted-foreground">Manage your library's book collection</p>
-              </div>
-              <Button className="mt-4 md:mt-0 bg-primary text-primary-foreground hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Book
-              </Button>
-            </div>
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
 
-            <div className="grid gap-6 md:grid-cols-4 mb-8">
-              <Card className="bg-muted">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Total Books</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">1,248</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Active Borrows</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">342</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Overdue</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-destructive">24</div>
-                </CardContent>
-              </Card>
-              <Card className="bg-muted">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">New This Month</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">56</div>
-                </CardContent>
-              </Card>
-            </div>
+    const [stats, setStats] = useState<AdminStats | null>(null);
+    const [books, setBooks] = useState<Book[]>([]);
+    const [isLoadingStats, setIsLoadingStats] = useState(true);
+    const [isLoadingBooks, setIsLoadingBooks] = useState(true);
+    const [errorStats, setErrorStats] = useState<string | null>(null);
+    const [errorBooks, setErrorBooks] = useState<string | null>(null);
 
-            <div className="flex justify-between items-center mb-4">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input type="search" placeholder="Search books..." className="w-full bg-muted pl-8 rounded-md" />
-              </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm">
-                  <ArrowUpDown className="h-4 w-4 mr-2" />
-                  Sort
-                </Button>
-                <Button variant="outline" size="sm">
-                  Filter
-                </Button>
-              </div>
-            </div>
+    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page') || 1));
+    const [totalPages, setTotalPages] = useState(1);
+    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
 
-            <div className="rounded-md border bg-card">
-              <div className="p-4 grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 font-medium border-b">
-                <div>Book</div>
-                <div>Details</div>
-                <div>Status</div>
-                <div>Borrows</div>
-                <div>Actions</div>
-              </div>
-              {books.map((book) => (
-                <div
-                  key={book.id}
-                  className="p-4 grid grid-cols-[auto_1fr_auto_auto_auto] items-center gap-4 border-b last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <Image
-                      src={book.coverUrl || "/placeholder.svg"}
-                      alt={book.title}
-                      width={50}
-                      height={75}
-                      className="rounded-sm"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{book.title}</h3>
-                    <p className="text-sm text-muted-foreground">{book.author}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="outline" className="text-xs bg-secondary">
-                        {book.category}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">Added: {book.added}</span>
+    const fetchStats = useCallback(async () => {
+        setIsLoadingStats(true);
+        setErrorStats(null);
+        try {
+            const data = await apiClient<AdminStats>('/admin/stats');
+            setStats(data);
+        } catch (err: any) {
+            setErrorStats(err.message || "Failed to load dashboard stats.");
+            toast({ title: "Error Loading Stats", description: err.message, variant: "destructive" });
+        } finally {
+            setIsLoadingStats(false);
+        }
+    }, [toast]);
+
+    const fetchBooks = useCallback(async () => {
+        setIsLoadingBooks(true);
+        setErrorBooks(null);
+        const params = new URLSearchParams();
+        params.set('page', String(currentPage));
+        params.set('limit', '10'); 
+        if (searchQuery) params.set('search', searchQuery);
+
+        try {
+            const data = await apiClient<BooksApiResponse>(`/books?${params.toString()}`); 
+            setBooks(data.books || []);
+            setTotalPages(data.totalPages || 1);
+        } catch (err: any) {
+            setErrorBooks(err.message || "Failed to load books.");
+            toast({ title: "Error Loading Books", description: err.message, variant: "destructive" });
+        } finally {
+            setIsLoadingBooks(false);
+        }
+    }, [currentPage, searchQuery, toast]); 
+
+    useEffect(() => {
+        fetchStats();
+    }, [fetchStats]);
+
+    useEffect(() => {
+        fetchBooks();
+    }, [fetchBooks]); 
+
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1); 
+    };
+
+     const handlePageChange = (page: number) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    const handleAddBook = () => {
+        toast({ title: "Action Needed", description: "Implement Add Book functionality." });
+    };
+
+    const handleEditBook = (bookId: string) => {
+        router.push(`/admin/books/${bookId}?action=edit`); 
+    };
+
+    const handleDeleteBook = async (bookId: string, bookTitle: string) => {
+        if (!confirm(`Are you sure you want to delete "${bookTitle}"? This action cannot be undone.`)) {
+             return;
+        }
+        try {
+            setBooks(prev => prev.filter(b => b.id !== bookId));
+            await apiClient(`/admin/books/${bookId}`, 'DELETE');
+            toast({ title: "Success", description: `Book "${bookTitle}" deleted.` });
+            fetchBooks(); 
+        } catch (err: any) {
+            toast({ title: "Error Deleting Book", description: err.message, variant: "destructive" });
+            fetchBooks();
+        }
+    };
+
+    const sidebarNavItems = [
+        { name: "Books", href: "/admin", icon: BookOpen },
+    ];
+    const isActive = (path: string) => pathname === path;
+
+    return (
+        <div className="flex min-h-screen flex-col">
+            <SiteHeader />
+            <div className="flex-1 flex">
+                 
+                <main className="flex-1 p-4 md:p-6">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
+                        <div>
+                            <h1 className="text-3xl font-bold mb-2">Books Management</h1>
+                            <p className="text-muted-foreground">Manage your library's book collection</p>
+                        </div>
+                        <Button onClick={handleAddBook} className="mt-4 md:mt-0 bg-primary text-primary-foreground hover:bg-primary/90">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add New Book
+                        </Button>
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Total Books</CardTitle>
+                                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    {isLoadingStats ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats?.totalBooks ?? 'N/A'}</div>}
+                                </CardContent>
+                            </Card>
+                             <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Active Borrows</CardTitle>
+                                    <BookUp className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    {isLoadingStats ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats?.activeBorrows ?? 'N/A'}</div>}
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Overdue Books</CardTitle>
+                                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                                </CardHeader>
+                                <CardContent>
+                                     {isLoadingStats ? <Skeleton className="h-8 w-1/4" /> : <div className={`text-2xl font-bold ${ (stats?.overdueBooks ?? 0) > 0 ? 'text-destructive' : ''}`}>{stats?.overdueBooks ?? 'N/A'}</div>}
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">New This Month</CardTitle>
+                                    <CalendarPlus className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                     {isLoadingStats ? <Skeleton className="h-8 w-1/4" /> : <div className="text-2xl font-bold">{stats?.newBooksMonthly ?? 'N/A'}</div>}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                            <div className="relative w-full sm:max-w-sm">
+                                <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search books by title, author, ISBN..."
+                                    className="w-full bg-background pl-8 rounded-md"
+                                    value={searchQuery}
+                                    onChange={handleSearchChange}
+                                />
+                            </div>
+                            <div className="flex gap-2 w-full sm:w-auto">
+                            </div>
+                        </div>
+
+                        <div className="rounded-md border">
+                             {isLoadingBooks ? (
+                                 <div className="space-y-1 p-4">
+                                     <Skeleton className="h-16 w-full" />
+                                     <Skeleton className="h-16 w-full" />
+                                     <Skeleton className="h-16 w-full" />
+                                     <Skeleton className="h-16 w-full" />
+                                     <Skeleton className="h-16 w-full" />
+                                 </div>
+                             ) : errorBooks ? (
+                                <p className="text-center text-destructive py-10">{errorBooks}</p>
+                             ) : books.length > 0 ? (
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[60px] hidden sm:table-cell"></TableHead>
+                                            <TableHead>Book Details</TableHead>
+                                            <TableHead>Availability</TableHead>
+                                            <TableHead className="hidden md:table-cell">Category</TableHead>
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {books.map((book) => (
+                                            <TableRow key={book.id}>
+                                                <TableCell className="hidden sm:table-cell">
+                                                    <Link href={`/admin/books/${book.id}`}>
+                                                        <Image
+                                                            src={book.coverUrl || book.cover || "/placeholder.svg"}
+                                                            alt={book.title}
+                                                            width={40}
+                                                            height={60}
+                                                            className="rounded-sm object-cover aspect-[2/3]"
+                                                        />
+                                                     </Link>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Link href={`/admin/books/${book.id}`} className="font-medium hover:underline">
+                                                        {book.title}
+                                                    </Link>
+                                                    <p className="text-sm text-muted-foreground">{book.author}</p>
+                                                    <p className="text-xs text-muted-foreground">ISBN: {book.isbn}</p>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant={book.available ? "success" : "destructive"} className="text-xs">
+                                                        {book.available ? "Available" : "Unavailable"}
+                                                    </Badge>
+                                                    <p className="text-xs text-muted-foreground">{book.availableCopies ?? 'N/A'} / {book.totalCopies ?? 'N/A'} copies</p>
+                                                </TableCell>
+                                                <TableCell className="hidden md:table-cell">{book.category || 'N/A'}</TableCell>
+                                                <TableCell className="text-right">
+                                                    <Button variant="ghost" size="icon" onClick={() => handleEditBook(book.id)} aria-label="Edit Book">
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button variant="ghost" size="icon" onClick={() => handleDeleteBook(book.id, book.title)} aria-label="Delete Book">
+                                                        <Trash className="h-4 w-4 text-destructive" />
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                             ) : (
+                                <p className="text-center text-muted-foreground py-10">No books found.</p>
+                             )}
+                        </div>
                     </div>
-                  </div>
-                  <div>
-                    <Badge
-                      variant="outline"
-                      className={`${
-                        book.status === "Available"
-                          ? "bg-success text-success-foreground"
-                          : "bg-destructive text-destructive-foreground"
-                      }`}
-                    >
-                      {book.status}
-                    </Badge>
-                  </div>
-                  <div className="text-center">
-                    <span className="font-medium">{book.borrows}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                </main>
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  )
+        </div>
+    )
 }
-
