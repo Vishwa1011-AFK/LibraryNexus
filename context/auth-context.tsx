@@ -1,122 +1,138 @@
 "use client"
 
-import type { ReactNode } from "react"
-import { createContext, useState, useEffect, useContext, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { apiClient } from "@/lib/api"
-import { type AuthUser } from "@/types"
-import { type SignupPayload } from "@/types";
-import { type SignInResponse } from "@/types";
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api';
+import { type User, type AuthUser } from '@/types';
 
-interface AuthContextProps {
-  user: AuthUser | null;
-  accessToken: string | null; 
-  login: (credentials: { email: string; password: string }) => Promise<AuthUser>;
-  logout: () => Promise<void>;
-  isLoading: boolean;
-  checkAuthStatus: () => Promise<void>;
-  updateUserContext: (updatedUserData: Partial<AuthUser>) => void;
+interface AuthContextType {
+    user: AuthUser | null;
+    isLoading: boolean;
+    accessToken: string | null;
+    setAccessToken: (token: string | null) => void;
+    login: (credentials: { email: string; password?: string }) => Promise<void>;
+    logout: () => Promise<void>;
+    fetchUser: () => Promise<void>;
+    updateUserContext: (updatedUserData: Partial<AuthUser>) => void;
 }
 
-const AuthContext = createContext<AuthContextProps>({
-  user: null,
-  accessToken: null,
-  login: async () => { throw new Error("Login function not implemented."); },
-  logout: async () => {},
-  isLoading: true,
-  checkAuthStatus: async () => {},
-  updateUserContext: () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+let currentAccessToken: string | null = null;
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [accessToken, setAccessToken] = useState<string | null>(null); 
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const router = useRouter();
+export const getAccessToken = () => currentAccessToken;
 
-  const checkAuthStatus = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const response = await apiClient<AuthUser>("/auth/status");
-      setUser(response);
-      // Assuming role determines isAdmin for simplicity
-      if (response) {
-          setUser({ ...response, isAdmin: response.role === 'admin' });
-      } else {
-          setUser(null);
-      }
-    } catch (error) {
-      console.warn("Auth status check failed or user not logged in:", error);
-      setUser(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
 
-  useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    const [accessTokenState, setAccessTokenState] = useState<string | null>(null);
 
-  const login = async (credentials: { email: string; password: string }): Promise<AuthUser> => {
-    try {
-        const response = await apiClient<SignInResponse>("/auth/login", "POST", credentials);
-        const loggedInUser: AuthUser = {
-            id: response.user.user_id,
-            role: response.user.role,
-            isAdmin: response.user.role === 'admin',
-            firstName: response.userdetails.firstName,
-            middleName: response.userdetails.middleName,
-            lastName: response.userdetails.lastName,
-            email: response.userdetails.email,
-            birthDate: response.userdetails.birthDate,
+    const setToken = useCallback((token: string | null) => {
+        currentAccessToken = token;
+        setAccessTokenState(token);
+    }, []);
+
+
+    const fetchUser = useCallback(async () => {
+        if (!getAccessToken()) {
+             setUser(null);
+             setIsLoading(false);
+             return;
+        }
+        setIsLoading(true);
+        try {
+            const userData = await apiClient<AuthUser>('/users/me', 'GET');
+            setUser({ ...userData, isAdmin: userData.role === 'admin' });
+        } catch (error: any) {
+            if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+                 console.log("fetchUser failed, attempting refresh or logging out");
+                 setUser(null);
+                 setToken(null);
+            } else {
+                 console.error("Failed to fetch user:", error);
+                 setUser(null);
+                 setToken(null);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    }, [setToken]);
+
+
+    const login = async (credentials: { email: string; password?: string }) => {
+        setIsLoading(true);
+        try {
+            const response = await apiClient<{ accessToken: string; user: User, userdetails: User }>(
+                '/auth/signin',
+                'POST',
+                credentials
+            );
+            setToken(response.accessToken);
+            const userData = response.userdetails || response.user;
+            setUser({ ...userData, isAdmin: response.user.role === 'admin' });
+            setIsLoading(false);
+        } catch (error) {
+            setIsLoading(false);
+            setToken(null);
+            setUser(null);
+            console.error("Login failed:", error);
+            throw error;
+        }
+    };
+
+    const logout = async () => {
+        setIsLoading(true);
+        try {
+            await apiClient('/auth/logout', 'POST');
+        } catch (error) {
+            console.error("Logout API call failed:", error);
+        } finally {
+            setToken(null);
+            setUser(null);
+            setIsLoading(false);
+             router.push('/signin');
+             console.log("User logged out, redirecting...");
+        }
+    };
+
+    const updateUserContext = (updatedUserData: Partial<AuthUser>) => {
+        setUser(prevUser => {
+            if (!prevUser) return null;
+            return { ...prevUser, ...updatedUserData };
+        });
+    };
+
+    useEffect(() => {
+        const tryRefreshAndFetch = async () => {
+            setIsLoading(true);
+            try {
+                const response = await apiClient<{ accessToken: string }>('/auth/token', 'POST');
+                setToken(response.accessToken);
+                await fetchUser();
+            } catch (error) {
+                console.log("Initial token refresh failed or no session.", error);
+                setToken(null);
+                setUser(null);
+            } finally {
+                 setIsLoading(false);
+            }
         };
-        setUser(loggedInUser);
-        setAccessToken(response.accessToken);
-        router.push(loggedInUser.isAdmin ? "/admin" : "/library"); 
-        return loggedInUser;
-    } catch (error) {
-      console.error("Login failed", error);
-      throw error;
+        tryRefreshAndFetch();
+    }, [setToken]);
+
+    return (
+        <AuthContext.Provider value={{ user, isLoading, accessToken: accessTokenState, setAccessToken: setToken, login, logout, fetchUser, updateUserContext }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (context === undefined) {
+        throw new Error('useAuth must be used within an AuthProvider');
     }
-  };
-
-  const logout = async () => {
-    try {
-      await apiClient("/auth/logout", "POST");
-    } catch (error) {
-      console.error("Logout API call failed (might be expected if session was already invalid):", error);
-    } finally {
-      setUser(null);
-      setAccessToken(null);
-      router.push("/signin");
-    }
-  };
-
-  const updateUserContext = (updatedUserData: Partial<AuthUser>) => {
-    setUser((currentUser) => {
-      if (!currentUser) return null;
-      const isAdmin = updatedUserData.isAdmin !== undefined ? updatedUserData.isAdmin : currentUser.isAdmin;
-      return { ...currentUser, ...updatedUserData, isAdmin };
-    });
-  };
-
-  const value: AuthContextProps = {
-    user,
-    accessToken,
-    login,
-    logout,
-    isLoading,
-    checkAuthStatus,
-    updateUserContext,
-  };
-
-  return <AuthContext.Provider value={value}>{!isLoading ? children : <div className="flex min-h-screen items-center justify-center">Authenticating...</div>}</AuthContext.Provider>;
-};
-
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+    return context;
+}
