@@ -88,12 +88,12 @@ export function AdminBookForm({ initialData, mode }: AdminBookFormProps) {
             const payload = { ...data };
 
             if (mode === 'edit' && initialData?.id) {
-                response = await apiClient(`/api/admin/books/${initialData.id}`, 'PUT', payload);
+                response = await apiClient(`/admin/books/${initialData.id}`, 'PUT', payload);
                 toast({ title: "Success", description: `Book "${data.title}" updated successfully.` });
                 router.push(`/admin/books/${initialData.id}`);
                 router.refresh();
             } else {
-                response = await apiClient('/api/admin/books', 'POST', payload);
+                response = await apiClient('/admin/books', 'POST', payload);
                 toast({ title: "Success", description: `Book "${data.title}" added successfully.` });
                 router.push('/admin');
                 router.refresh();

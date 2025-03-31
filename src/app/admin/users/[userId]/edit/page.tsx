@@ -30,7 +30,7 @@ export default function EditUserPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const fetchedUser = await apiClient<User>(`/api/admin/users/${userId}`);
+            const fetchedUser = await apiClient<User>(`/admin/users/${userId}`);
             setUserData(fetchedUser);
         } catch (err: any) {
             setError(err.message || "Failed to load user data for editing.");

@@ -46,7 +46,7 @@ export default function AdminBookDetail() {
         setIsLoadingBook(true);
         setErrorBook(null);
         try {
-            const fetchedBook = await apiClient<BookType>(`/api/admin/books/${bookId}`);
+            const fetchedBook = await apiClient<BookType>(`/admin/books/${bookId}`);
             setBook(fetchedBook);
         } catch (err: any) {
             setErrorBook(err.message || "Failed to load book details.");
@@ -64,7 +64,7 @@ export default function AdminBookDetail() {
     const handleReturnBook = async (loanId: string) => {
         setIsReturningLoanId(loanId);
         try {
-            const response = await apiClient<ApiResponseWithMessage>(`/api/admin/loans/return/${loanId}`, 'POST', {});
+            const response = await apiClient<ApiResponseWithMessage>(`/admin/loans/return/${loanId}`, 'POST', {});
             toast({ title: "Success", description: response.message || `Loan ID ${loanId} marked as returned.` });
             fetchBookDetails();
         } catch (err: any) {
@@ -294,7 +294,6 @@ export default function AdminBookDetail() {
                     </div>
 
 
-                    {/* Issue History Section */}
                     <div>
                         <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
                             <Book className="h-5 w-5 text-primary" />

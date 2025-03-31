@@ -84,7 +84,7 @@ export function AdminUserForm({ userData }: AdminUserFormProps) {
                 birthDate: data.birthDate ? new Date(data.birthDate).toISOString() : undefined,
             };
 
-            await apiClient(`/api/admin/users/${userData.id}`, 'PUT', payload);
+            await apiClient(`/admin/users/${userData.id}`, 'PUT', payload);
             toast({ title: "Success", description: `User "${data.firstName} ${data.lastName}" updated successfully.` });
             router.push('/admin/users');
             router.refresh();

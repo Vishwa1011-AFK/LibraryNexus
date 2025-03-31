@@ -40,89 +40,92 @@ export interface Book {
   issueHistory?: AdminIssueHistoryItem[];
 }
 
-export interface BooksApiResponse {
+export interface PaginatedApiResponse {
+  total?: number;
+  page?: number;
+  totalPages?: number;
+}
+
+export interface BooksApiResponse extends PaginatedApiResponse {
   books: Book[];
+}
+
+export interface BorrowedBook {
+  loanId: string;
+  book: {
+      id: string;
+      title: string;
+      author: string;
+      isbn: string;
+      coverUrl?: string;
+      category?: string;
+      location?: string;
+      publishDate?: string;
+  } | null;
+  issueDate: string | Date;
+  dueDate: string | Date;
+}
+
+export interface ReadingHistoryItem {
+  loanId: string;
+  book: {
+      id: string;
+      title: string;
+      author: string;
+      isbn: string;
+      coverUrl?: string;
+      category?: string;
+  } | null;
+  issueDate: string | Date;
+  completedDate: string | Date;
+}
+
+export interface ReadingHistoryApiResponse extends PaginatedApiResponse {
+  history: ReadingHistoryItem[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface BorrowedBook {
-loanId: string;
-book: {
-    id: string;
-    title: string;
-    author: string;
-    isbn: string;
-    coverUrl?: string;
-    category?: string;
-    location?: string;
-    publishDate?: string;
-} | null;
-issueDate: string | Date;
-dueDate: string | Date;
-}
-
 export interface WishlistItem {
-id: string
-title: string
-author: string
-isbn: string
-coverUrl?: string
-category?: string
-addedAt: string | Date
+  id: string;
+  title: string;
+  author: string;
+  isbn: string;
+  coverUrl?: string;
+  category?: string;
+  addedAt: string | Date;
 }
 
 export interface WishlistApiResponse {
-userId: string
-books: WishlistItem[]
+  userId: string;
+  books: WishlistItem[];
 }
 
 export interface SignupPayload {
-firstName: string;
-middleName?: string;
-lastName: string;
-email: string;
-password?: string;
-birthDate?: string;
-adminCode?: string;
-}
-
-export interface ReadingHistoryItem {
-loanId: string;
-book: {
-    id: string;
-    title: string;
-    author: string;
-    isbn: string;
-    coverUrl?: string;
-    category?: string;
-} | null;
-issueDate: string | Date;
-completedDate: string | Date;
-}
-
-export interface ReadingHistoryApiResponse {
-history: ReadingHistoryItem[];
-total: number;
-page: number;
-totalPages: number;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  email: string;
+  password?: string;
+  birthDate?: string;
+  adminCode?: string;
 }
 
 export interface SignInResponse {
-  accessToken: string
-  msg: string
+  accessToken: string;
+  msg: string;
   user: {
-      user_id: string
-      role: 'student' | 'admin'
-  }
+      user_id: string;
+      role: 'student' | 'admin';
+  };
   userdetails: {
-      firstName: string
-      middleName?: string
-      lastName: string
-      email: string
-      birthDate?: string
-  }
+      firstName: string;
+      middleName?: string;
+      lastName: string;
+      email: string;
+      birthDate?: string;
+  };
 }
 
 export interface AdminStats {
@@ -144,22 +147,24 @@ export interface AdminIssueHistoryItem {
   status: 'Issued' | 'Returned' | 'Overdue' | 'Submitted';
 }
 
-export interface AdminIssueHistoryApiResponse {
+export interface AdminIssueHistoryApiResponse extends PaginatedApiResponse {
   history: AdminIssueHistoryItem[];
   total: number;
   page: number;
   totalPages: number;
 }
 
-export interface ApiResponseWithMessage {
-  success: boolean;
-  message: string;
-  [key: string]: any; 
-}
-
-export interface AdminUsersApiResponse {
+export interface AdminUsersApiResponse extends PaginatedApiResponse {
   users: User[];
   total: number;
   page: number;
   totalPages: number;
+}
+
+export interface ApiResponseWithMessage {
+  success?: boolean;
+  message: string;
+  msg?: string;
+  error?: string;
+  [key: string]: any;
 }

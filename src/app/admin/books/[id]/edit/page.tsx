@@ -30,7 +30,7 @@ export default function EditBookPage() {
         setIsLoading(true);
         setError(null);
         try {
-            const fetchedBook = await apiClient<Book>(`/api/admin/books/${bookId}`);
+            const fetchedBook = await apiClient<Book>(`/admin/books/${bookId}`);
             setBookData(fetchedBook);
         } catch (err: any) {
             setError(err.message || "Failed to load book data for editing.");

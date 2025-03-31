@@ -67,7 +67,7 @@ export default function AdminUsersPage() {
         const queryString = buildQueryParams();
 
         try {
-            const data = await apiClient<AdminUsersApiResponse>(`/api/admin/users?${queryString}`);
+            const data = await apiClient<AdminUsersApiResponse>(`/admin/users?${queryString}`);
             setUsers(data.users || []);
             setTotalPages(data.totalPages || 1);
             setTotalUsersCount(data.total || 0);
@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
         }
 
         try {
-            await apiClient(`/api/admin/users/${userId}`, 'DELETE');
+            await apiClient(`/admin/users/${userId}`, 'DELETE');
             toast({ title: "Success", description: `User "${userEmail}" deleted successfully.` });
             fetchUsers();
         } catch (err: any) {

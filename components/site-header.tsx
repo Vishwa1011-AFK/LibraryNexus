@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, User, LogOut, Heart, Compass, Search as SearchIcon } from "lucide-react";
+import { Menu, User, LogOut, Heart, Compass, Search as SearchIcon, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,24 +18,27 @@ export function SiteHeader() {
     const { user, logout } = useAuth();
     const isLoggedIn = !!user;
 
-    const navItems = [
+    const baseNavItems = [
         { name: "Explore", href: "/library", icon: <Compass className="h-5 w-5" /> },
         { name: "Search Catalog", href: "/books", icon: <SearchIcon className="h-5 w-5" /> },
         { name: "Wishlist", href: "/wishlist", icon: <Heart className="h-5 w-5" /> },
         { name: "Account", href: "/account", icon: <User className="h-5 w-5" /> },
     ];
 
+    const adminNavItem = { name: "Admin", href: "/admin", icon: <Shield className="h-5 w-5" /> };
+
     const isActive = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
     const handleSignOut = async (e: React.MouseEvent<HTMLButtonElement | HTMLAnchorElement>) => {
         e.preventDefault();
         await logout();
-        setIsMenuOpen(false);
+        setIsMenuOpen(false); 
     };
 
     return (
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center justify-between">
+                {/* Logo */}
                 <div className="flex items-center gap-2">
                     <Link href="/" className="flex items-center gap-2">
                         <div className="relative h-8 w-8 overflow-hidden rounded-md">
@@ -47,7 +50,7 @@ export function SiteHeader() {
 
                 {isLoggedIn && !isMobile && (
                     <nav className="hidden md:flex items-center gap-6">
-                        {navItems.map((item) => (
+                        {baseNavItems.map((item) => (
                             <Link
                                 key={item.href}
                                 href={item.href}
@@ -59,13 +62,24 @@ export function SiteHeader() {
                                 {item.name}
                             </Link>
                         ))}
+                        {user?.isAdmin && (
+                            <Link
+                                key={adminNavItem.href}
+                                href={adminNavItem.href}
+                                className={cn(
+                                    "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                                    isActive(adminNavItem.href) ? "text-primary" : "text-muted-foreground"
+                                )}
+                            >
+                                {adminNavItem.name}
+                            </Link>
+                        )}
                     </nav>
                 )}
 
                 <div className="flex items-center gap-2">
                     {isLoggedIn ? (
                         <>
-                            {/* Mobile Menu */}
                             {isMobile && (
                                 <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
                                     <SheetTrigger asChild>
@@ -81,7 +95,7 @@ export function SiteHeader() {
                                                 <span className="font-bold">Nexus Library</span>
                                             </Link>
                                             <nav className="flex flex-col gap-4 px-2">
-                                                {navItems.map((item) => (
+                                                {baseNavItems.map((item) => (
                                                     <Link
                                                         key={item.href}
                                                         href={item.href}
@@ -95,9 +109,23 @@ export function SiteHeader() {
                                                         {item.name}
                                                     </Link>
                                                 ))}
+                                                {user?.isAdmin && (
+                                                     <Link
+                                                        key={adminNavItem.href}
+                                                        href={adminNavItem.href}
+                                                        className={cn(
+                                                            "flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary",
+                                                            isActive(adminNavItem.href) ? "text-primary" : "text-muted-foreground"
+                                                        )}
+                                                        onClick={() => setIsMenuOpen(false)}
+                                                    >
+                                                        {adminNavItem.icon}
+                                                        {adminNavItem.name}
+                                                    </Link>
+                                                )}
                                                 <button
                                                     onClick={handleSignOut}
-                                                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary text-left w-full"
+                                                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary text-left w-full pt-4 border-t mt-2" // Added spacing
                                                     aria-label="Sign Out"
                                                 >
                                                     <LogOut className="h-5 w-5" />
