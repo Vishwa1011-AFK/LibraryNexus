@@ -36,7 +36,6 @@ export default async function Home() {
       <main className="flex-1 flex items-center">
         <div className="container px-4 md:px-6">
           <div className="grid gap-8 lg:grid-cols-2 lg:gap-12 items-center">
-            {/* Text Column */}
             <div className="space-y-4">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl lg:text-5xl">
                 Unlock your institute's LRC digitally with Nexus
@@ -57,20 +56,16 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Enhanced Book Grid Column */}
             <div className="flex items-center justify-center perspective-[1500px]">
               {featuredBooks.length > 0 ? (
                 <div className="grid grid-cols-3 gap-3 relative w-full max-w-md lg:max-w-lg">
                   {featuredBooks.slice(0, 6).map((book, index) => {
-                    // Calculate staggered animation delay
                     const animationDelay = index * 100
                     
-                    // Calculate subtle rotation for each book
                     const rotationDegrees = index % 2 === 0 ? 
                       Math.floor(Math.random() * 2) + 1 : 
                       -1 * (Math.floor(Math.random() * 2) + 1)
                     
-                    // Vertical offset for middle column
                     const verticalOffset = index % 3 === 0 ? "mt-2" : 
                                           index % 3 === 1 ? "mt-4" : 
                                           "mt-0"
@@ -86,10 +81,8 @@ export default async function Home() {
                         }}
                       >
                         <div className="w-full h-full relative group">
-                          {/* Shadow overlay for hover effect */}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
                           
-                          {/* Book cover image */}
                           <div className="relative w-full h-full rounded-lg overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.2)] group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.3)] transition-all duration-500 transform group-hover:translate-y-[-3px] group-hover:rotate-[0deg]" 
                                style={{ transformStyle: 'preserve-3d' }}>
                             <Image
@@ -102,7 +95,6 @@ export default async function Home() {
                             />
                           </div>
                           
-                          {/* Book title and author overlay */}
                           <div className="absolute bottom-0 left-0 right-0 p-2 text-white z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                             <p className="text-sm font-medium line-clamp-1">{book.title}</p>
                             <p className="text-xs opacity-80 line-clamp-1">{book.author}</p>

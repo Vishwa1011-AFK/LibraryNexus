@@ -1,266 +1,207 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { SiteHeader } from "@/components/site-header"
-import { UserInfoHeader } from "@/components/user-info-header"
-import { BookGrid } from "@/components/book-grid"
-import { Input } from "@/components/ui/input"
-import { Search } from "lucide-react"
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { apiClient } from "@/lib/api"
-import { type Book, type BooksApiResponse } from "@/types"
-import { useAuth } from "@/context/auth-context"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
-import { cn } from "@/lib/utils"
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { SiteHeader } from "@/components/site-header";
+import { UserInfoHeader } from "@/components/user-info-header";
+import { BookCard } from "@/components/book-card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Star, Sparkles, Library as LibraryIcon, TrendingUp } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { apiClient } from "@/lib/api";
+import { type Book, type BooksApiResponse } from "@/types";
+import { useAuth } from "@/context/auth-context";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
 
-type SortOptionKey = 'newest' | 'oldest' | 'title_asc' | 'title_desc' | 'author_asc' | 'author_desc';
-const sortOptions: { value: SortOptionKey; label: string }[] = [
-    { value: 'newest', label: 'Newest' },
-    { value: 'oldest', label: 'Oldest' },
-    { value: 'title_asc', label: 'Title (A-Z)' },
-    { value: 'title_desc', label: 'Title (Z-A)' },
-    { value: 'author_asc', label: 'Author (A-Z)' },
-    { value: 'author_desc', label: 'Author (Z-A)' },
-];
+const SectionTitle = ({ title, icon, onViewAllLink }: { title: string; icon?: React.ReactNode, onViewAllLink?: string }) => (
+    <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+            {icon} {title}
+        </h2>
+        {onViewAllLink && (
+            <Link href={onViewAllLink} passHref>
+                 <Button variant="outline" size="sm">View All</Button>
+            </Link>
+        )}
+    </div>
+);
+
+const BookSection = ({ books, isLoading }: { books: Book[]; isLoading: boolean }) => {
+    if (isLoading) {
+        return (
+            <div className="flex space-x-4 overflow-x-auto pb-4 -ml-4 pl-4">
+                {Array.from({ length: 5 }).map((_, index) => (
+                     <div key={index} className="w-36 md:w-40 flex-shrink-0 space-y-2">
+                         <Skeleton className="aspect-[2/3] w-full rounded-md" />
+                         <Skeleton className="h-4 w-3/4" />
+                         <Skeleton className="h-4 w-1/2" />
+                     </div>
+                ))}
+            </div>
+        );
+    }
+
+    if (books.length === 0) {
+        return <p className="text-muted-foreground text-sm">No books found for this section.</p>;
+    }
+
+    return (
+         <Carousel opts={{ align: "start", dragFree: true }} className="w-full">
+            <CarouselContent className="-ml-4">
+                {books.map((book) => (
+                    <CarouselItem key={book.id} className="pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
+                         <BookCard
+                            id={book.id}
+                            title={book.title}
+                            author={book.author}
+                            coverUrl={book.coverUrl || book.cover || "/placeholder.svg"}
+                            category={book.category}
+                            available={book.available}
+                            className="h-full"
+                        />
+                    </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute left-[-10px] top-1/2 -translate-y-1/2 z-10 hidden sm:flex" />
+            <CarouselNext className="absolute right-[-10px] top-1/2 -translate-y-1/2 z-10 hidden sm:flex" />
+        </Carousel>
+    );
+};
 
 export default function LibraryPage() {
     const { user, isLoading: authLoading } = useAuth();
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
     const { toast } = useToast();
+    const router = useRouter();
 
-    const [books, setBooks] = useState<Book[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [totalPages, setTotalPages] = useState(1);
-    const [totalBooksCount, setTotalBooksCount] = useState(0);
-
-    const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || "");
-    const [category, setCategory] = useState(searchParams.get('category') || "all");
-    const [sortBy, setSortBy] = useState<SortOptionKey>((searchParams.get('sortBy') as SortOptionKey) || "newest");
-    const [currentPage, setCurrentPage] = useState(Number(searchParams.get('page') || 1));
-
+    const [featuredBooks, setFeaturedBooks] = useState<Book[]>([]);
+    const [newBooks, setNewBooks] = useState<Book[]>([]);
+    const [popularBooks, setPopularBooks] = useState<Book[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
 
-    const isAdmin = user?.isAdmin || false;
+    const [loadingFeatured, setLoadingFeatured] = useState(true);
+    const [loadingNew, setLoadingNew] = useState(true);
+    const [loadingPopular, setLoadingPopular] = useState(true);
+    const [loadingCategories, setLoadingCategories] = useState(true);
 
-    const buildQueryParams = useCallback(() => {
-        const params = new URLSearchParams();
-        params.set('page', String(currentPage));
-        params.set('limit', '10');
-        if (searchQuery) params.set('search', searchQuery);
-        if (category !== 'all') params.set('category', category);
-        if (sortBy) params.set('sortBy', sortBy);
-        return params.toString();
-    }, [currentPage, searchQuery, category, sortBy]);
+    const [discoverySearch, setDiscoverySearch] = useState("");
 
-    const fetchBooks = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        const queryString = buildQueryParams();
-
+    const fetchSection = useCallback(async (
+        endpoint: string,
+        setter: React.Dispatch<React.SetStateAction<Book[]>>,
+        setLoading: React.Dispatch<React.SetStateAction<boolean>>
+    ) => {
+        setLoading(true);
         try {
-            const data = await apiClient<BooksApiResponse>(`/books?${queryString}`);
-            setBooks(data.books || []);
-            setTotalPages(data.totalPages || 1);
-            setTotalBooksCount(data.total || 0);
-
-            const correctedPage = Math.max(1, Math.min(data.page, data.totalPages || 1));
-             if (correctedPage !== currentPage) {
-                 setCurrentPage(correctedPage);
-             } else {
-                setCurrentPage(data.page);
-             }
-
+            const data = await apiClient<BooksApiResponse>(endpoint);
+            setter(data.books || []);
         } catch (err: any) {
-            console.error("Failed to fetch books:", err);
-            setError(err.message || "Failed to load books.");
-            toast({ title: "Error", description: err.message || "Failed to load books.", variant: "destructive" });
-            setBooks([]);
-            setTotalPages(1);
-            setTotalBooksCount(0);
+            console.error(`Failed to fetch ${endpoint}:`, err);
+            setter([]); 
         } finally {
-            setIsLoading(false);
+            setLoading(false);
         }
-    }, [buildQueryParams, toast, currentPage]);
+    }, [toast]); 
 
-    const fetchCategories = useCallback(async () => {
+    const fetchCategoriesData = useCallback(async () => {
+        setLoadingCategories(true);
         try {
             const cats = await apiClient<string[]>('/categories');
             setCategories(cats || []);
         } catch (err) {
             console.error("Failed to fetch categories:", err);
             toast({ title: "Error", description: "Failed to load categories.", variant: "destructive" });
+        } finally {
+            setLoadingCategories(false);
         }
     }, [toast]);
 
     useEffect(() => {
-        fetchBooks();
-        if (categories.length === 0) {
-            fetchCategories();
-        }
-        const queryString = buildQueryParams();
-        router.replace(`${pathname}?${queryString}`, { scroll: false });
-    }, [fetchBooks, fetchCategories, buildQueryParams, router, pathname, categories.length]);
+        fetchSection('/books?featured=true&limit=10', setFeaturedBooks, setLoadingFeatured);
+        fetchSection('/books?sortBy=newest&limit=10', setNewBooks, setLoadingNew);
+        setLoadingPopular(false); 
+        fetchCategoriesData();
+    }, [fetchSection, fetchCategoriesData]);
 
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchQuery(e.target.value);
-        setCurrentPage(1);
-    };
-    const handleCategoryChange = (value: string) => {
-        setCategory(value);
-        setCurrentPage(1);
-    };
-    const handleSortChange = (value: SortOptionKey) => {
-        setSortBy(value);
-        setCurrentPage(1);
-    };
-    const handlePageChange = (page: number) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
+    const handleDiscoverySearch = (e: React.FormEvent) => {
+        e.preventDefault();
+        if(discoverySearch.trim()){
+            router.push(`/books?search=${encodeURIComponent(discoverySearch)}`);
         }
-    };
-
-    const renderPaginationItems = () => {
-        const items = [];
-        const maxPagesToShow = 5;
-        const halfMaxPages = Math.floor(maxPagesToShow / 2);
-        let startPage = Math.max(1, currentPage - halfMaxPages);
-        let endPage = Math.min(totalPages, currentPage + halfMaxPages);
-
-        if (currentPage - halfMaxPages <= 1) {
-            endPage = Math.min(totalPages, maxPagesToShow);
-        }
-        if (currentPage + halfMaxPages >= totalPages) {
-            startPage = Math.max(1, totalPages - maxPagesToShow + 1);
-        }
-
-        if (startPage > 1) {
-            items.push(
-                <PaginationItem key={1}>
-                    <PaginationLink onClick={() => handlePageChange(1)} isActive={currentPage === 1}>1</PaginationLink>
-                </PaginationItem>
-            );
-            if (startPage > 2) {
-                items.push(<PaginationItem key="start-ellipsis"><PaginationEllipsis /></PaginationItem>);
-            }
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            items.push(
-                <PaginationItem key={i}>
-                    <PaginationLink onClick={() => handlePageChange(i)} isActive={currentPage === i}>
-                    {i}
-                    </PaginationLink>
-                </PaginationItem>
-            );
-        }
-
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                items.push(<PaginationItem key="end-ellipsis"><PaginationEllipsis /></PaginationItem>);
-            }
-            items.push(
-                <PaginationItem key={totalPages}>
-                    <PaginationLink onClick={() => handlePageChange(totalPages)} isActive={currentPage === totalPages}>{totalPages}</PaginationLink>
-                </PaginationItem>
-            );
-        }
-        return items;
     };
 
     if (authLoading) return <div className="flex min-h-screen flex-col"><SiteHeader /><main className="flex-1 flex items-center justify-center">Loading User...</main></div>;
 
     return (
-        <div className="flex min-h-screen flex-col bg-gradient-to-br from-background to-background/80">
+        <div className="flex min-h-screen flex-col">
             <SiteHeader />
             <main className="flex-1 py-8">
                 <div className="container mx-auto px-4">
-                    {user && <UserInfoHeader name={`${user.firstName} ${user.lastName}`} email={user.email} isAdmin={isAdmin} />}
+                    {user && <UserInfoHeader name={`${user.firstName} ${user.lastName}`} email={user.email} isAdmin={user?.isAdmin} />}
 
-                    <div className="mb-8 space-y-4">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <h1 className="text-2xl font-bold flex items-center gap-2">
-                                Library Books
-                                {!isLoading && !error && <span className="text-sm font-normal text-muted-foreground">({totalBooksCount} items found)</span>}
-                            </h1>
-                        </div>
-                        <div className="flex flex-col sm:flex-row gap-4">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                                <Input placeholder="Search books, authors, ISBN..." className="pl-10 border-input bg-background" value={searchQuery} onChange={handleSearchChange} />
-                            </div>
-                            <div className="flex gap-2">
-                                <Select value={category} onValueChange={handleCategoryChange}>
-                                    <SelectTrigger className="w-full sm:w-[180px] border-input bg-background"> <SelectValue placeholder="Category" /> </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Categories</SelectItem>
-                                        {categories.map(cat => (<SelectItem key={cat} value={cat}>{cat}</SelectItem>))}
-                                    </SelectContent>
-                                </Select>
-                                <Select value={sortBy} onValueChange={(value) => handleSortChange(value as SortOptionKey)}>
-                                    <SelectTrigger className="w-full sm:w-[150px] border-input bg-background"> <SelectValue placeholder="Sort by" /> </SelectTrigger>
-                                    <SelectContent>
-                                        {sortOptions.map(opt => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    </div>
+                    <form onSubmit={handleDiscoverySearch} className="mb-12 mt-6 max-w-lg mx-auto">
+                         <div className="relative">
+                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                            <Input
+                                placeholder="Quick search... (Press Enter to go to catalog)"
+                                className="pl-10"
+                                value={discoverySearch}
+                                onChange={(e) => setDiscoverySearch(e.target.value)}
+                            />
+                         </div>
+                    </form>
 
-                    {isLoading ? (
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6 mb-8">
-                            {Array.from({ length: 10 }).map((_, index) => (
-                                <div key={index} className="space-y-2">
-                                    <Skeleton className="aspect-[2/3] w-full rounded-md" />
-                                    <Skeleton className="h-4 w-3/4" />
-                                    <Skeleton className="h-4 w-1/2" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : error ? (
-                        <div className="text-center text-destructive py-10">{error}</div>
-                    ) : books.length > 0 ? (
-                        <BookGrid books={books} isAdmin={isAdmin} className="mb-8" />
-                    ) : (
-                        <div className="text-center text-muted-foreground py-10">No books found matching your criteria.</div>
+                    <section className="mb-12">
+                        <SectionTitle title="Featured Books" icon={<Star className="h-6 w-6 text-yellow-500" />} onViewAllLink="/books?featured=true" />
+                        <BookSection books={featuredBooks} isLoading={loadingFeatured} />
+                    </section>
+
+                    <section className="mb-12">
+                        <SectionTitle title="New Arrivals" icon={<Sparkles className="h-6 w-6 text-blue-500" />} onViewAllLink="/books?sortBy=newest" />
+                        <BookSection books={newBooks} isLoading={loadingNew} />
+                    </section>
+
+                    {!loadingPopular && popularBooks.length > 0 && (
+                        <section className="mb-12">
+                            <SectionTitle title="Popular This Week" icon={<TrendingUp className="h-6 w-6 text-green-500" />} onViewAllLink="/books?sortBy=popularity" />
+                            <BookSection books={popularBooks} isLoading={loadingPopular} />
+                        </section>
                     )}
 
-                    {!isLoading && !error && totalPages > 1 && (
-                        <Pagination>
-                            <PaginationContent>
-                                <PaginationItem>
-                                    <PaginationPrevious
-                                        onClick={() => handlePageChange(currentPage - 1)}
-                                        aria-disabled={currentPage <= 1}
-                                        className={cn("cursor-pointer", currentPage <= 1 && "pointer-events-none opacity-50 cursor-not-allowed")}
-                                    />
-                                </PaginationItem>
-                                {renderPaginationItems()}
-                                <PaginationItem>
-                                    <PaginationNext
-                                        onClick={() => handlePageChange(currentPage + 1)}
-                                        aria-disabled={currentPage >= totalPages}
-                                        className={cn("cursor-pointer", currentPage >= totalPages && "pointer-events-none opacity-50 cursor-not-allowed")}
-                                    />
-                                </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                    )}
+                    <section className="mb-12">
+                        <SectionTitle title="Browse by Genre" icon={<LibraryIcon className="h-6 w-6 text-purple-500" />} />
+                        {loadingCategories ? (
+                            <div className="flex flex-wrap gap-2">
+                                <Skeleton className="h-8 w-24 rounded-full" />
+                                <Skeleton className="h-8 w-20 rounded-full" />
+                                <Skeleton className="h-8 w-28 rounded-full" />
+                                <Skeleton className="h-8 w-16 rounded-full" />
+                                <Skeleton className="h-8 w-24 rounded-full" />
+                            </div>
+                        ) : categories.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                                {categories.slice(0, 15).map((cat) => ( 
+                                    <Link key={cat} href={`/books?category=${encodeURIComponent(cat)}`} passHref>
+                                        <Badge variant="secondary" className="px-3 py-1 text-sm cursor-pointer hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/30 transition-colors">
+                                            {cat}
+                                        </Badge>
+                                    </Link>
+                                ))}
+                                 <Link href="/books" passHref>
+                                    <Badge variant="outline" className="px-3 py-1 text-sm cursor-pointer hover:bg-accent">
+                                        View All Categories
+                                    </Badge>
+                                </Link>
+                            </div>
+                        ) : (
+                            <p className="text-muted-foreground text-sm">No categories found.</p>
+                        )}
+                    </section>
                 </div>
             </main>
         </div>
-    )
+    );
 }
