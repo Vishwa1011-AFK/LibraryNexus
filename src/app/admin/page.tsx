@@ -21,6 +21,24 @@ import {
     DropdownMenuRadioGroup,
     DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import {
+    Sheet,
+    SheetContent,
+    SheetDescription,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+    SheetFooter,
+    SheetClose,
+} from "@/components/ui/sheet";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   BookOpen,
@@ -32,6 +50,7 @@ import {
   Edit,
   Trash,
   Filter,
+  Library,
 } from "lucide-react";
 import { ProtectedRoute } from "@/components/protected-route";
 import { useToast } from "@/hooks/use-toast";
@@ -39,29 +58,27 @@ import { apiClient } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
     type Book,
-    type BooksApiResponse, // Use the base one
+    type BooksApiResponse,
     type AdminStats,
 } from "@/types";
 
-// Define Admin specific types locally within this component file
 interface AdminBook extends Book {
     totalCopies?: number;
     availableCopies?: number;
     status?: "Available" | "Unavailable" | string;
-    added?: string | Date; // Ensure Date is allowed if backend provides it
+    added?: string | Date;
     borrows?: number;
 }
 
-// Define AdminBooksApiResponse locally, extending the base BooksApiResponse
 interface AdminBooksApiResponse extends BooksApiResponse {
     books: AdminBook[];
-    // total, page, totalPages are inherited and optional from BooksApiResponse
 }
-
 
 type SortField = 'title' | 'author' | 'isbn' | 'category' | 'addedDate';
 type SortDirection = 'asc' | 'desc';
 type AdminSortOption = `${SortField}_${SortDirection}`;
+type StatusOption = 'all' | 'available' | 'unavailable';
+type FeaturedOption = 'all' | 'true' | 'false';
 
 const ADMIN_SORT_OPTIONS: { value: AdminSortOption | 'default', label: string }[] = [
     { value: 'title_asc', label: 'Title (A-Z)' },
@@ -82,15 +99,48 @@ export default function AdminDashboard() {
     const [isLoadingBooks, setIsLoadingBooks] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [sortBy, setSortBy] = useState<AdminSortOption | 'default'>('title_asc');
+    const [categories, setCategories] = useState<string[]>([]);
+    const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+
+    const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<StatusOption>('all');
+    const [selectedFeatured, setSelectedFeatured] = useState<FeaturedOption>('all');
+
+    const [tempCategory, setTempCategory] = useState<string>('all');
+    const [tempStatus, setTempStatus] = useState<StatusOption>('all');
+    const [tempFeatured, setTempFeatured] = useState<FeaturedOption>('all');
 
     const buildBookQueryParams = useCallback(() => {
         const params = new URLSearchParams();
+        params.set('page', '1');
+        params.set('limit', '15');
         if (searchTerm) params.set('search', searchTerm);
         if (sortBy !== 'default' && sortBy !== 'title_asc') {
              params.set('sortBy', sortBy);
         }
+        if (selectedCategory !== 'all') params.set('category', selectedCategory);
+        if (selectedStatus !== 'all') params.set('status', selectedStatus);
+        if (selectedFeatured !== 'all') params.set('featured', selectedFeatured);
+
         return params.toString();
-    }, [searchTerm, sortBy]);
+    }, [searchTerm, sortBy, selectedCategory, selectedStatus, selectedFeatured]);
+
+
+    const fetchBooks = useCallback(async () => {
+        setIsLoadingBooks(true);
+        const queryString = buildBookQueryParams();
+        try {
+            const data = await apiClient<AdminBooksApiResponse>(`/admin/books?${queryString}`);
+            setBooks(data.books || []);
+        } catch (error: any) {
+            console.error("Error fetching books:", error);
+            toast({ title: "Error Loading Books", description: error.message || "Could not load book list.", variant: "destructive" });
+            setBooks([]);
+        } finally {
+            setIsLoadingBooks(false);
+        }
+    }, [toast, buildBookQueryParams]);
 
 
     useEffect(() => {
@@ -112,22 +162,24 @@ export default function AdminDashboard() {
 
 
      useEffect(() => {
-        const fetchBooks = async () => {
-            setIsLoadingBooks(true);
-            const queryString = buildBookQueryParams();
+        fetchBooks();
+    }, [fetchBooks]);
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            setIsLoadingCategories(true);
             try {
-                const data = await apiClient<AdminBooksApiResponse>(`/admin/books?${queryString}`);
-                setBooks(data.books || []);
+                const cats = await apiClient<string[]>('/categories');
+                setCategories(cats || []);
             } catch (error: any) {
-                console.error("Error fetching books:", error);
-                toast({ title: "Error Loading Books", description: error.message || "Could not load book list.", variant: "destructive" });
-                setBooks([]);
+                 console.error("Error fetching categories:", error);
+                 toast({ title: "Error Loading Categories", description: error.message || "Could not load categories.", variant: "destructive" });
             } finally {
-                setIsLoadingBooks(false);
+                 setIsLoadingCategories(false);
             }
         };
-        fetchBooks();
-    }, [toast, buildBookQueryParams]);
+        fetchCategories();
+    }, [toast]);
 
 
      const handleDeleteBook = async (bookId: string, bookTitle: string) => {
@@ -138,21 +190,46 @@ export default function AdminDashboard() {
          try {
              await apiClient(`/admin/books/${bookId}`, 'DELETE');
              toast({ title: "Success", description: `Book "${bookTitle}" deleted successfully.` });
-             setBooks(prev => prev.filter(b => b.id !== bookId));
+             fetchBooks();
+             const fetchStats = async () => {
+                 try { const data = await apiClient<AdminStats>('/admin/dashboard-stats'); setStats(data); } catch { /* ignore */ }
+             };
+             fetchStats();
          } catch (error: any) {
              toast({ title: "Deletion Failed", description: error.message || "Could not delete book.", variant: "destructive" });
-         } finally {
              setIsLoadingBooks(false);
          }
-     };
-
-     const handleFilterClick = () => {
-         toast({ title: "Filter", description: "Filter functionality is not yet implemented." });
      };
 
     const handleSortChange = (value: string) => {
         setSortBy(value as AdminSortOption | 'default');
     };
+
+    const handleApplyFilters = () => {
+        setSelectedCategory(tempCategory);
+        setSelectedStatus(tempStatus);
+        setSelectedFeatured(tempFeatured);
+        setIsFilterSheetOpen(false);
+    };
+
+    const handleClearFilters = () => {
+        setTempCategory('all');
+        setTempStatus('all');
+        setTempFeatured('all');
+        setSelectedCategory('all');
+        setSelectedStatus('all');
+        setSelectedFeatured('all');
+        setIsFilterSheetOpen(false);
+    };
+
+     useEffect(() => {
+         if (isFilterSheetOpen) {
+             setTempCategory(selectedCategory);
+             setTempStatus(selectedStatus);
+             setTempFeatured(selectedFeatured);
+         }
+     }, [isFilterSheetOpen, selectedCategory, selectedStatus, selectedFeatured]);
+
 
     return (
          <ProtectedRoute adminOnly={true}>
@@ -170,6 +247,10 @@ export default function AdminDashboard() {
                                 <Link href="/admin/users" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin/users' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
                                     <Users className="h-4 w-4" />
                                     <span>Users</span>
+                                </Link>
+                                <Link href="/admin/loans" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin/loans' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+                                  <Library className="h-4 w-4" /> 
+                                  <span>Loans</span>
                                 </Link>
                              </nav>
                          </div>
@@ -190,7 +271,7 @@ export default function AdminDashboard() {
                                  </Link>
                              </div>
 
-                             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+                              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
                                 {isLoadingStats ? (
                                     <>
                                         {[...Array(4)].map((_, i) => (
@@ -252,12 +333,79 @@ export default function AdminDashboard() {
                              <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
                                  <div className="relative w-full md:max-w-sm">
                                      <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                     <Input type="search" placeholder="Search books by title, author, ISBN..." className="w-full bg-background pl-8 rounded-md border-input" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                                     <Input
+                                        type="search"
+                                        placeholder="Search books..."
+                                        className="w-full bg-background pl-8 rounded-md border-input"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        onKeyDown={(e) => { if (e.key === 'Enter') fetchBooks(); }}
+                                     />
                                  </div>
                                  <div className="flex gap-2 w-full md:w-auto">
-                                     <Button variant="outline" size="sm" className="flex-1 md:flex-none" onClick={handleFilterClick}>
-                                         <Filter className="h-4 w-4 mr-2" /> Filter
-                                     </Button>
+                                      <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                                        <SheetTrigger asChild>
+                                            <Button variant="outline" size="sm" className="flex-1 md:flex-none">
+                                                <Filter className="h-4 w-4 mr-2" /> Filter
+                                                 { (selectedCategory !== 'all' || selectedStatus !== 'all' || selectedFeatured !== 'all') && <span className="ml-2 h-2 w-2 rounded-full bg-primary"></span> }
+                                            </Button>
+                                        </SheetTrigger>
+                                        <SheetContent>
+                                            <SheetHeader>
+                                            <SheetTitle>Filter Books</SheetTitle>
+                                            <SheetDescription>
+                                                Apply filters to narrow down the book list.
+                                            </SheetDescription>
+                                            </SheetHeader>
+                                            <div className="grid gap-4 py-4">
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="filter-category" className="text-right">Category</Label>
+                                                    <Select value={tempCategory} onValueChange={setTempCategory} disabled={isLoadingCategories}>
+                                                        <SelectTrigger id="filter-category" className="col-span-3">
+                                                            <SelectValue placeholder="Select Category" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Categories</SelectItem>
+                                                            {categories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="filter-status" className="text-right">Status</Label>
+                                                    <Select value={tempStatus} onValueChange={(v) => setTempStatus(v as StatusOption)}>
+                                                        <SelectTrigger id="filter-status" className="col-span-3">
+                                                            <SelectValue placeholder="Select Status" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All Statuses</SelectItem>
+                                                            <SelectItem value="available">Available</SelectItem>
+                                                            <SelectItem value="unavailable">Unavailable</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="filter-featured" className="text-right">Featured</Label>
+                                                     <Select value={tempFeatured} onValueChange={(v) => setTempFeatured(v as FeaturedOption)}>
+                                                        <SelectTrigger id="filter-featured" className="col-span-3">
+                                                            <SelectValue placeholder="Select Featured Status" />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            <SelectItem value="all">All</SelectItem>
+                                                            <SelectItem value="true">Yes</SelectItem>
+                                                            <SelectItem value="false">No</SelectItem>
+                                                        </SelectContent>
+                                                    </Select>
+                                                </div>
+                                            </div>
+                                            <SheetFooter>
+                                                <Button variant="outline" onClick={handleClearFilters}>Clear Filters</Button>
+                                                <SheetClose asChild>
+                                                     <Button onClick={handleApplyFilters}>Apply Filters</Button>
+                                                </SheetClose>
+                                            </SheetFooter>
+                                        </SheetContent>
+                                      </Sheet>
+
                                       <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="outline" size="sm" className="flex-1 md:flex-none w-[130px] justify-between">
@@ -308,7 +456,7 @@ export default function AdminDashboard() {
                                         ) : books.length === 0 ? (
                                              <TableRow>
                                                 <TableCell colSpan={7} className="text-center h-24">
-                                                    {searchTerm ? `No books found matching "${searchTerm}".` : "No books found. Add one!"}
+                                                    {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all' || selectedFeatured !== 'all' ? `No books found matching the current criteria.` : "No books found. Add one!"}
                                                 </TableCell>
                                             </TableRow>
                                         ) : (

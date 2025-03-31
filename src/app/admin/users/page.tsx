@@ -22,8 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
 import { type User, type AdminUsersApiResponse } from "@/types";
 import { useAuth } from "@/context/auth-context";
+import { ProtectedRoute } from "@/components/protected-route";
 import { cn } from "@/lib/utils";
-import { Search, Edit, Trash, UserPlus, CheckCircle, XCircle, ArrowLeft } from "lucide-react";
+import { Search, Edit, Trash, CheckCircle, XCircle, ArrowLeft, BookOpen, Users, Library } from "lucide-react";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -88,9 +89,14 @@ export default function AdminUsersPage() {
         fetchUsers();
     }, [fetchUsers, currentPage]);
 
+     useEffect(() => {
+         setCurrentPage(1);
+         fetchUsers();
+     }, [searchQuery]);
+
+
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
-        setCurrentPage(1);
     };
 
      const handlePageChange = (page: number) => {
@@ -146,131 +152,154 @@ export default function AdminUsersPage() {
      }
 
     return (
-        <div className="flex min-h-screen flex-col">
-            <SiteHeader />
-            <main className="flex-1 p-4 md:p-6">
-                <div className="container mx-auto max-w-7xl">
-                     <div className="mb-6">
-                        <Button variant="outline" size="sm" onClick={() => router.push('/admin')}>
-                            <ArrowLeft className="mr-2 h-4 w-4"/> Back to Admin Dashboard
-                        </Button>
-                    </div>
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <div>
-                            <h1 className="text-3xl font-bold mb-2">User Management</h1>
-                            <p className="text-muted-foreground">View, edit, and manage library users.</p>
-                        </div>
-                    </div>
-
-                     <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                        <div className="relative w-full sm:max-w-sm">
-                            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                type="search"
-                                placeholder="Search users by name, email..."
-                                className="w-full bg-background pl-8 rounded-md"
-                                value={searchQuery}
-                                onChange={handleSearchChange}
-                                onKeyDown={(e) => { if (e.key === 'Enter') fetchUsers(); }}
-                            />
-                        </div>
-                    </div>
-
-                     <div className="rounded-md border">
-                         {isLoadingUsers ? (
-                             <div className="space-y-1 p-4">
-                                 {Array.from({ length: 7 }).map((_, i) => ( <Skeleton key={i} className="h-12 w-full" /> ))}
-                             </div>
-                         ) : errorUsers ? (
-                            <p className="text-center text-destructive py-10">{errorUsers}</p>
-                         ) : users.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Name</TableHead>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead className="hidden md:table-cell">Role</TableHead>
-                                        <TableHead className="hidden sm:table-cell">Verified</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell className="font-medium">{formatName(user)}</TableCell>
-                                            <TableCell>{user.email}</TableCell>
-                                            <TableCell className="hidden md:table-cell">
-                                                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>{user.role}</Badge>
-                                            </TableCell>
-                                            <TableCell className="hidden sm:table-cell">
-                                                {user.email_verified ? (
-                                                    <CheckCircle className="h-5 w-5 text-green-500" />
-                                                ) : (
-                                                    <XCircle className="h-5 w-5 text-destructive" />
-                                                )}
-                                            </TableCell>
-                                            <TableCell className="text-right">
-                                                <Button variant="ghost" size="icon" onClick={() => handleEditUser(user.id)} aria-label="Edit User">
-                                                    <Edit className="h-4 w-4" />
-                                                </Button>
-                                                <AlertDialog>
-                                                    <AlertDialogTrigger asChild>
-                                                         <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            aria-label="Delete User"
-                                                            disabled={currentAdminUser?.id === user.id}
-                                                          >
-                                                            <Trash className="h-4 w-4 text-destructive" />
-                                                        </Button>
-                                                    </AlertDialogTrigger>
-                                                    <AlertDialogContent>
-                                                        <AlertDialogHeader>
-                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                                            <AlertDialogDescription>
-                                                                This action cannot be undone. This will permanently delete the user "{formatName(user)}" ({user.email}). Active loans must be returned first.
-                                                            </AlertDialogDescription>
-                                                        </AlertDialogHeader>
-                                                        <AlertDialogFooter>
-                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                            <AlertDialogAction
-                                                                onClick={() => handleDeleteUser(user.id, user.email)}
-                                                                className={buttonVariants({ variant: "destructive" })}
-                                                            >
-                                                                Delete User
-                                                            </AlertDialogAction>
-                                                        </AlertDialogFooter>
-                                                    </AlertDialogContent>
-                                                </AlertDialog>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                         ) : (
-                             <p className="text-center text-muted-foreground py-10">
-                                 {searchQuery ? `No users found matching "${searchQuery}".` : "No users found."}
-                             </p>
-                         )}
-                     </div>
-
-                      {!isLoadingUsers && !errorUsers && totalPages > 1 && (
-                         <div className="mt-6 flex justify-center">
-                             <Pagination>
-                                 <PaginationContent>
-                                     <PaginationItem>
-                                         <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} aria-disabled={currentPage <= 1} className={cn("cursor-pointer", currentPage <= 1 && "pointer-events-none opacity-50")} />
-                                     </PaginationItem>
-                                     {renderPaginationItems()}
-                                     <PaginationItem>
-                                         <PaginationNext onClick={() => handlePageChange(currentPage + 1)} aria-disabled={currentPage >= totalPages} className={cn("cursor-pointer", currentPage >= totalPages && "pointer-events-none opacity-50")} />
-                                     </PaginationItem>
-                                 </PaginationContent>
-                             </Pagination>
+         <ProtectedRoute adminOnly={true}>
+            <div className="flex min-h-screen flex-col">
+                <SiteHeader />
+                <div className="flex flex-1">
+                     <aside className="w-64 border-r border-border hidden md:block flex-shrink-0">
+                         <div className="p-4 sticky top-16">
+                             <h2 className="font-semibold mb-4">Admin Panel</h2>
+                             <nav className="space-y-1">
+                                <Link href="/admin" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+                                <BookOpen className="h-4 w-4" />
+                                    <span>Books</span>
+                                </Link>
+                                <Link href="/admin/users" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin/users' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+                                    <Users className="h-4 w-4" />
+                                    <span>Users</span>
+                                </Link>
+                                <Link href="/admin/loans" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin/loans' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+                                  <Library className="h-4 w-4" />
+                                  <span>Loans</span>
+                                </Link>
+                             </nav>
                          </div>
-                     )}
-                </div>
-            </main>
-        </div>
+                     </aside>
+
+                     <main className="flex-1 p-4 md:p-6 overflow-x-auto">
+                        <div className="container mx-auto max-w-7xl">
+                             <div className="mb-6">
+                                <Button variant="outline" size="sm" onClick={() => router.push('/admin')}>
+                                    <ArrowLeft className="mr-2 h-4 w-4"/> Back to Admin Dashboard
+                                </Button>
+                            </div>
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                                <div>
+                                    <h1 className="text-3xl font-bold mb-2">User Management</h1>
+                                    <p className="text-muted-foreground">View, edit, and manage library users.</p>
+                                </div>
+                            </div>
+
+                             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                                <div className="relative w-full sm:max-w-sm">
+                                    <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="search"
+                                        placeholder="Search users by name, email..."
+                                        className="w-full bg-background pl-8 rounded-md"
+                                        value={searchQuery}
+                                        onChange={handleSearchChange}
+                                    />
+                                </div>
+                            </div>
+
+                             <div className="rounded-md border">
+                                 {isLoadingUsers ? (
+                                     <div className="space-y-1 p-4">
+                                         {Array.from({ length: 7 }).map((_, i) => ( <Skeleton key={i} className="h-12 w-full" /> ))}
+                                     </div>
+                                 ) : errorUsers ? (
+                                    <p className="text-center text-destructive py-10">{errorUsers}</p>
+                                 ) : users.length > 0 ? (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>Email</TableHead>
+                                                <TableHead className="hidden md:table-cell">Role</TableHead>
+                                                <TableHead className="hidden sm:table-cell">Verified</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {users.map((user) => (
+                                                <TableRow key={user.id}>
+                                                    <TableCell className="font-medium">{formatName(user)}</TableCell>
+                                                    <TableCell>{user.email}</TableCell>
+                                                    <TableCell className="hidden md:table-cell">
+                                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>{user.role}</Badge>
+                                                    </TableCell>
+                                                    <TableCell className="hidden sm:table-cell">
+                                                        {user.email_verified ? (
+                                                            <CheckCircle className="h-5 w-5 text-green-500" />
+                                                        ) : (
+                                                            <XCircle className="h-5 w-5 text-destructive" />
+                                                        )}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="icon" onClick={() => handleEditUser(user.id)} aria-label="Edit User">
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                        <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                                 <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    aria-label="Delete User"
+                                                                    disabled={currentAdminUser?.id === user.id}
+                                                                  >
+                                                                    <Trash className="h-4 w-4 text-destructive" />
+                                                                </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                                <AlertDialogHeader>
+                                                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                                    <AlertDialogDescription>
+                                                                        This action cannot be undone. This will permanently delete the user "{formatName(user)}" ({user.email}). Active loans must be returned first.
+                                                                    </AlertDialogDescription>
+                                                                </AlertDialogHeader>
+                                                                <AlertDialogFooter>
+                                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                    <AlertDialogAction
+                                                                        onClick={() => handleDeleteUser(user.id, user.email)}
+                                                                        className={buttonVariants({ variant: "destructive" })}
+                                                                    >
+                                                                        Delete User
+                                                                    </AlertDialogAction>
+                                                                </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                        </AlertDialog>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                 ) : (
+                                     <p className="text-center text-muted-foreground py-10">
+                                         {searchQuery ? `No users found matching "${searchQuery}".` : "No users found."}
+                                     </p>
+                                 )}
+                             </div>
+
+                              {!isLoadingUsers && !errorUsers && totalPages > 1 && (
+                                 <div className="mt-6 flex justify-center">
+                                     <Pagination>
+                                         <PaginationContent>
+                                             <PaginationItem>
+                                                 <PaginationPrevious onClick={() => handlePageChange(currentPage - 1)} aria-disabled={currentPage <= 1} className={cn("cursor-pointer", currentPage <= 1 && "pointer-events-none opacity-50")} />
+                                             </PaginationItem>
+                                             {renderPaginationItems()}
+                                             <PaginationItem>
+                                                 <PaginationNext onClick={() => handlePageChange(currentPage + 1)} aria-disabled={currentPage >= totalPages} className={cn("cursor-pointer", currentPage >= totalPages && "pointer-events-none opacity-50")} />
+                                             </PaginationItem>
+                                         </PaginationContent>
+                                     </Pagination>
+                                 </div>
+                             )}
+                        </div>
+                    </main>
+                 </div>
+            </div>
+        </ProtectedRoute>
     );
 }
