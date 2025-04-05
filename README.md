@@ -5,7 +5,7 @@
 
 LibraryNexus is a comprehensive digital library management system designed specifically for educational institutions, with initial support tailored for IIITM via email domain validation. The platform provides an intuitive interface for students and faculty to browse, borrow, and manage books, while empowering administrators with robust tools to oversee the entire library inventory and user activity.
 
-![LibraryNexus Home Page](./screenshots/Home_Page.png)
+![LibraryNexus Home Page](./screenshot/Home_Page.png)
 
 ## Table of Contents
 
@@ -65,7 +65,7 @@ Explore the live version of LibraryNexus:
 -   **Insightful Analytics Dashboard:** Track key library metrics like popular books, borrowing trends, and user engagement.
 -   **Featured Book Management:** Highlight specific books on the homepage or catalog.
 
-![Admin Dashboard](./screenshots/Admin_Dashboard.png)
+![Admin Dashboard](./screenshot/Admin_Dashboard.png)
 
 ## Technology Stack
 
@@ -92,7 +92,7 @@ Explore the live version of LibraryNexus:
 
 The system follows a standard client-server architecture with a distinct frontend and backend communicating via a RESTful API.
 
-![Architecture Diagram](./screenshots/Arcitecture_Diagram.png)
+![Architecture Diagram](./screenshot/Arcitecture_Diagram.png)
 
 ## Installation
 
@@ -210,24 +210,24 @@ The application's data is organized around the following Mongoose models:
 -   **Wishlist:** Manages lists of books users want to borrow, linking a `User` to multiple `Book` entries.
 -   **RefreshToken:** Stores active refresh tokens associated with users for persistent sessions.
 
-![Database Schema](./screenshots/Database_Schema.png)
+![Database Schema](./screenshot/Database_Schema.png)
 
 ## User Interface Highlights
 
 ### User Dashboard
 
 A central hub for users to view their current loans, overdue books, reading history, and wishlist items at a glance.
-![User Dashboard](./screenshots/User_Dashboard.png)
+![User Dashboard](./screenshot/User_Dashboard.png)
 
 ### Book Catalog
 
 An engaging interface for browsing, searching, and filtering the library's collection.
-![Book Catalog](./screenshots/Book_Catalog.png)
+![Book Catalog](./screenshot/Book_Catalog.png)
 
 ### Book Details
 
 Provides comprehensive information about a selected book, including availability and borrowing options.
-![Book Details](./screenshots/Book_Details.png)
+![Book Details](./screenshot/Book_Details.png)
 
 ### Admin Dashboard
 
@@ -236,7 +236,7 @@ Offers administrators key statistics and quick access to management functions. (
 ### Admin Book Management
 
 Allows administrators to efficiently add, update, or remove books and manage inventory copies.
-![Admin Book Management](./screenshots/Admin_Book_Management.png)
+![Admin Book Management](./screenshot/Admin_Book_Management.png)
 
 ## Authentication System
 
