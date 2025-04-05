@@ -110,9 +110,8 @@ Follow these steps to set up LibraryNexus locally for development.
 
 1.  **Clone the Frontend Repository:**
     ```bash
-    # Replace <your-github-username> with your actual username
-    git clone https://github.com/<your-github-username>/library-nexus.git
-    cd library-nexus
+    git clone https://github.com/Vishwa1011-AFK/LibraryNexus.git
+    cd LibraryNexus
     ```
 
 2.  **Install Dependencies:**
@@ -125,7 +124,7 @@ Follow these steps to set up LibraryNexus locally for development.
     ```
 
 3.  **Configure Environment Variables:**
-    Create a `.env.local` file in the root of the `library-nexus` directory with the following content. **Do not commit this file to version control.**
+    Create a `.env.local` file in the root of the `LibraryNexus` directory with the following content. **Do not commit this file to version control.**
     ```env
     # URL of your running backend API server
     NEXT_PUBLIC_API_URL=http://localhost:5000/api
@@ -133,7 +132,6 @@ Follow these steps to set up LibraryNexus locally for development.
     # The base URL where your frontend application will run
     NEXT_PUBLIC_SITE_URL=http://localhost:3000
     ```
-    *(Consider creating a `.env.example` file to track required variables.)*
 
 4.  **Start the Development Server:**
     ```bash
@@ -149,10 +147,8 @@ Follow these steps to set up LibraryNexus locally for development.
 
 1.  **Clone the Backend Repository:**
     ```bash
-    # Replace <your-github-username> with your actual username
-    # Ensure this path is correct for your backend repository
-    git clone https://github.com/<your-github-username>/library-nexus-backend.git
-    cd library-nexus-backend
+    git clone https://github.com/Vishwa1011-AFK/LibraryNexus-Backend.git
+    cd LibraryNexus-Backend
     ```
 
 2.  **Install Dependencies:**
@@ -161,7 +157,7 @@ Follow these steps to set up LibraryNexus locally for development.
     ```
 
 3.  **Configure Environment Variables:**
-    Create a `.env` file in the root of the `library-nexus-backend` directory. Populate it with your specific configuration. **Keep this file secure and do not commit it.**
+    Create a `.env` file in the root of the `LibraryNexus-Backend` directory. Populate it with your specific configuration. **Keep this file secure and do not commit it.**
     ```env
     # Server Port
     PORT=5000
@@ -184,10 +180,9 @@ Follow these steps to set up LibraryNexus locally for development.
     # Timezone for date operations (e.g., loan due dates)
     TIMEZONE=Asia/Kolkata
 
-    # Add other necessary variables like CORS_ORIGIN if needed
-    # CORS_ORIGIN=http://localhost:3000
+    # Frontend URL for CORS configuration in backend
+    FRONTEND_URL=http://localhost:3000 # Make sure this matches your NEXT_PUBLIC_SITE_URL
     ```
-    *(Strongly recommend creating a `.env.example` file listing required variables without their values.)*
 
 4.  **Start the Backend Server:**
     ```bash
@@ -310,12 +305,12 @@ Security is a priority:
 
 Contributions are welcome! If you'd like to improve LibraryNexus, please follow these steps:
 
-1.  **Fork** the repository on GitHub.
-2.  **Clone** your forked repository locally (`git clone https://github.com/your-username/library-nexus.git`).
+1.  **Fork** the repository on GitHub (either Frontend or Backend).
+2.  **Clone** your forked repository locally (e.g., `git clone https://github.com/your-username/LibraryNexus.git`).
 3.  Create a new **branch** for your feature or bug fix (`git checkout -b feature/your-amazing-feature` or `bugfix/issue-description`).
 4.  Make your **changes** and **commit** them with clear, descriptive messages (`git commit -m 'feat: Add functionality for X'`).
 5.  **Push** your changes to your forked repository (`git push origin feature/your-amazing-feature`).
-6.  Open a **Pull Request** (PR) from your branch to the main repository's `main` branch.
+6.  Open a **Pull Request** (PR) from your branch to the original repository's (`Vishwa1011-AFK/LibraryNexus` or `Vishwa1011-AFK/LibraryNexus-Backend`) `main` branch.
 7.  Clearly describe your changes in the PR and link any relevant issues.
 
 Please ensure your code adheres to the project's coding style and includes tests where applicable.
