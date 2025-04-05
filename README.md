@@ -65,7 +65,7 @@ Explore the live version of LibraryNexus:
 -   **Insightful Analytics Dashboard:** Track key library metrics like popular books, borrowing trends, and user engagement.
 -   **Featured Book Management:** Highlight specific books on the homepage or catalog.
 
-![Admin Dashboard](./screenshots/admin-dashboard.png)
+![Admin Dashboard](https://drive.google.com/file/d/1at20815JbnltyPbTLMhxbI7nNpQ0mR4f/view?usp=sharing)
 
 ## Technology Stack
 
@@ -217,17 +217,17 @@ The application's data is organized around the following Mongoose models:
 ### User Dashboard
 
 A central hub for users to view their current loans, overdue books, reading history, and wishlist items at a glance.
-![User Dashboard](./screenshots/user-dashboard.png)
+![User Dashboard](https://drive.google.com/file/d/1rgQPfGty5PVc9aKuvZJdvfB_iTiMsmun/view?usp=sharing)
 
 ### Book Catalog
 
 An engaging interface for browsing, searching, and filtering the library's collection.
-![Book Catalog](./screenshots/book-catalog.png)
+![Book Catalog](https://drive.google.com/file/d/1XytvsAptuw2wbfjjA6CfYNiSkQ98Kyx2/view?usp=sharing)
 
 ### Book Details
 
 Provides comprehensive information about a selected book, including availability and borrowing options.
-![Book Details](./screenshots/book-details.png)
+![Book Details](https://drive.google.com/file/d/1EdF03rJzoTAtjUxeBLh3HYLg6PL3WJbw/view?usp=sharing)
 
 ### Admin Dashboard
 
@@ -236,7 +236,7 @@ Offers administrators key statistics and quick access to management functions. (
 ### Admin Book Management
 
 Allows administrators to efficiently add, update, or remove books and manage inventory copies.
-![Admin Book Management](./screenshots/admin-book-management.png)
+![Admin Book Management](https://drive.google.com/file/d/1l0HZJ-iNEriea6sDIjlvvvuKhIR7u_c1/view?usp=sharing)
 
 ## Authentication System
 
