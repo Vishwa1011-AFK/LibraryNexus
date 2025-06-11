@@ -291,12 +291,13 @@ export default function AdminLoansPage() {
                                                              {loan.status}
                                                           </Badge>
                                                     </TableCell>
-                                                    <TableCell className="text-right space-x-1 whitespace-nowrap">
-                                                         {!loan.returned && (
+                                                    <TableCell className="text-right">
+                                                         <div className="flex flex-col sm:flex-row gap-1 justify-end items-stretch sm:items-center">
+                                                          {!loan.returned && (
                                                             <>
                                                                 <AlertDialog>
                                                                     <AlertDialogTrigger asChild>
-                                                                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={actionLoading[loan.id]}>
+                                                                        <Button variant="outline" size="sm" className="h-7 px-2 text-xs w-full sm:w-auto" disabled={actionLoading[loan.id]}>
                                                                             <Undo2 className="mr-1 h-3 w-3" /> {actionLoading[loan.id] ? 'Returning...' : 'Return'}
                                                                         </Button>
                                                                     </AlertDialogTrigger>
@@ -314,28 +315,29 @@ export default function AdminLoansPage() {
                                                                     </AlertDialogContent>
                                                                 </AlertDialog>
 
-                                                                <AlertDialog>
-                                                                     <AlertDialogTrigger asChild>
-                                                                         <Button variant="outline" size="sm" className="h-7 px-2 text-xs" disabled={actionLoading[loan.id]}>
-                                                                             <RefreshCw className="mr-1 h-3 w-3" /> {actionLoading[loan.id] ? 'Renewing...' : 'Renew'}
-                                                                         </Button>
-                                                                     </AlertDialogTrigger>
-                                                                     <AlertDialogContent>
-                                                                         <AlertDialogHeader>
-                                                                             <AlertDialogTitle>Confirm Renewal</AlertDialogTitle>
-                                                                             <AlertDialogDescription>
-                                                                                 Renew loan for "{loan.book?.title}"? This will extend the due date by 14 days from the current due date ({formatDate(loan.returnDate)}).
-                                                                             </AlertDialogDescription>
-                                                                         </AlertDialogHeader>
-                                                                         <AlertDialogFooter>
-                                                                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                                             <AlertDialogAction onClick={() => handleRenewLoan(loan.id)}>Confirm Renewal</AlertDialogAction>
-                                                                         </AlertDialogFooter>
-                                                                     </AlertDialogContent>
-                                                                 </AlertDialog>
-                                                             </>
-                                                         )}
-                                                    </TableCell>
+                                                                 <AlertDialog>
+                                                                      <AlertDialogTrigger asChild>
+                                                                          <Button variant="outline" size="sm" className="h-7 px-2 text-xs w-full sm:w-auto" disabled={actionLoading[loan.id]}>
+                                                                              <RefreshCw className="mr-1 h-3 w-3" /> {actionLoading[loan.id] ? 'Renewing...' : 'Renew'}
+                                                                          </Button>
+                                                                      </AlertDialogTrigger>
+                                                                      <AlertDialogContent>
+                                                                          <AlertDialogHeader>
+                                                                              <AlertDialogTitle>Confirm Renewal</AlertDialogTitle>
+                                                                              <AlertDialogDescription>
+                                                                                  Renew loan for "{loan.book?.title}"? This will extend the due date by 14 days from the current due date ({formatDate(loan.returnDate)}).
+                                                                              </AlertDialogDescription>
+                                                                          </AlertDialogHeader>
+                                                                          <AlertDialogFooter>
+                                                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                              <AlertDialogAction onClick={() => handleRenewLoan(loan.id)}>Confirm Renewal</AlertDialogAction>
+                                                                          </AlertDialogFooter>
+                                                                      </AlertDialogContent>
+                                                                  </AlertDialog>
+                                                              </>
+                                                          )}
+                                                          </div>
+                                                     </TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>

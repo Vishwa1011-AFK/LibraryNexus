@@ -36,19 +36,13 @@ export function SiteHeader() {
     };
 
     return (
-        // Increased header height slightly
         <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            {/* Increased header height */}
             <div className="container flex h-20 items-center justify-between">
-                {/* Increased gap */}
                 <div className="flex items-center gap-3">
                     <Link href="/" className="flex items-center gap-3">
-                         {/* Increased logo container size */}
                         <div className="relative h-12 w-12 overflow-hidden rounded-md">
-                             {/* Increased logo image size */}
                             <Image src="/nexus-logo.svg" alt="Nexus Library Logo" width={42} height={42} className="object-contain" priority />
                         </div>
-                        {/* Increased text size */}
                         <span className="hidden font-display text-2xl font-weight: 700 tracking-wide sm:inline-block">
                             Library Nexus
                         </span>
@@ -56,7 +50,6 @@ export function SiteHeader() {
                 </div>
 
                 {isLoggedIn && !isMobile && (
-                     // Adjusted gap for nav items if needed, keeping as is for now
                     <nav className="hidden md:flex items-center gap-6">
                         {baseNavItems.map((item) => (
                             <Link
@@ -99,9 +92,7 @@ export function SiteHeader() {
                                     <SheetContent side="left" className="w-[240px] sm:w-[300px]">
                                         <div className="flex flex-col gap-6 py-4">
                                             <Link href="/" className="flex items-center gap-2 px-2" onClick={() => setIsMenuOpen(false)}>
-                                                 {/* Increased logo size in mobile sheet */}
                                                 <Image src="/nexus-logo.svg" alt="Nexus Library Logo" width={40} height={40} className="rounded-md" />
-                                                 {/* Adjusted size in mobile sheet */}
                                                 <span className="font-display text-xl tracking-wide">
                                                     Library Nexus
                                                 </span>
@@ -155,7 +146,7 @@ export function SiteHeader() {
                     ) : (
                         <>
                             <Link href="/signin" passHref>
-                                <Button variant="outline" size="sm" className="hidden sm:flex">Sign In</Button>
+                                <Button variant="outline" size="sm">Sign In</Button>
                             </Link>
                             <Link href="/signup" passHref>
                                 <Button size="sm">Sign Up</Button>

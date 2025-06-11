@@ -1,4 +1,3 @@
-// src/app/admin/page.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -6,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter, usePathname } from 'next/navigation';
 import { SiteHeader } from "@/components/site-header";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button"; 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -52,6 +51,7 @@ import {
   Filter,
   Library,
 } from "lucide-react";
+import { useIsMobile } from '@/hooks/use-mobile'; 
 import { ProtectedRoute } from "@/components/protected-route";
 import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api";
@@ -93,6 +93,7 @@ export default function AdminDashboard() {
     const { toast } = useToast();
     const router = useRouter();
     const pathname = usePathname();
+    const isMobile = useIsMobile(); 
     const [stats, setStats] = useState<AdminStats | null>(null);
     const [books, setBooks] = useState<AdminBook[]>([]);
     const [isLoadingStats, setIsLoadingStats] = useState(true);
@@ -240,23 +241,54 @@ export default function AdminDashboard() {
                          <div className="p-4 sticky top-16">
                              <h2 className="font-semibold mb-4">Admin Panel</h2>
                              <nav className="space-y-1">
-                                <Link href="/admin" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
-                                <BookOpen className="h-4 w-4" />
-                                    <span>Books</span>
-                                </Link>
-                                <Link href="/admin/users" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin/users' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
-                                    <Users className="h-4 w-4" />
-                                    <span>Users</span>
-                                </Link>
-                                <Link href="/admin/loans" className={cn("flex items-center gap-2 px-3 py-2 rounded-md", pathname === '/admin/loans' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
-                                  <Library className="h-4 w-4" /> 
-                                  <span>Loans</span>
-                                </Link>
+                                 {/* Removed alignment:'left' from buttonVariants */}
+                                 <Link href="/admin" className={cn(buttonVariants({ variant: pathname === '/admin' || pathname.startsWith('/admin/books') ? 'secondary' : 'ghost', size: 'sm' }), "w-full justify-start")}>
+                                     <BookOpen className="h-4 w-4 mr-2" /> Books
+                                 </Link>
+                                 <Link href="/admin/users" className={cn(buttonVariants({ variant: pathname.startsWith('/admin/users') ? 'secondary' : 'ghost', size: 'sm' }), "w-full justify-start")}>
+                                     <Users className="h-4 w-4 mr-2" /> Users
+                                 </Link>
+                                 <Link href="/admin/loans" className={cn(buttonVariants({ variant: pathname.startsWith('/admin/loans') ? 'secondary' : 'ghost', size: 'sm' }), "w-full justify-start")}>
+                                   <Library className="h-4 w-4 mr-2" /> Loans
+                                 </Link>
                              </nav>
                          </div>
                      </aside>
 
-                     <main className="flex-1 p-4 md:p-6 overflow-x-auto">
+                     <main className="flex-1 p-4 md:p-6"> {/* Removed overflow-x-auto, Table has it */}
+                         {isMobile && (
+                              <nav className="mb-4 p-1 border-b border-border bg-muted/50 rounded-md">
+                                  <div className="flex justify-around items-center gap-1">
+                                      <Link href="/admin" passHref legacyBehavior>
+                                          <a className={cn(
+                                              buttonVariants({ variant: pathname === '/admin' || pathname.startsWith('/admin/books') ? 'secondary' : 'ghost', size: 'sm' }),
+                                              "flex-1 flex flex-col sm:flex-row items-center h-auto py-2 sm:h-9"
+                                          )}>
+                                              <BookOpen className="h-5 w-5 sm:mr-2" />
+                                              <span className="mt-1 sm:mt-0 text-xs sm:text-sm">Books</span>
+                                          </a>
+                                      </Link>
+                                      <Link href="/admin/users" passHref legacyBehavior>
+                                           <a className={cn(
+                                              buttonVariants({ variant: pathname.startsWith('/admin/users') ? 'secondary' : 'ghost', size: 'sm' }),
+                                              "flex-1 flex flex-col sm:flex-row items-center h-auto py-2 sm:h-9"
+                                           )}>
+                                               <Users className="h-5 w-5 sm:mr-2" />
+                                               <span className="mt-1 sm:mt-0 text-xs sm:text-sm">Users</span>
+                                           </a>
+                                      </Link>
+                                      <Link href="/admin/loans" passHref legacyBehavior>
+                                           <a className={cn(
+                                              buttonVariants({ variant: pathname.startsWith('/admin/loans') ? 'secondary' : 'ghost', size: 'sm' }),
+                                              "flex-1 flex flex-col sm:flex-row items-center h-auto py-2 sm:h-9"
+                                           )}>
+                                               <Library className="h-5 w-5 sm:mr-2" />
+                                               <span className="mt-1 sm:mt-0 text-xs sm:text-sm">Loans</span>
+                                           </a>
+                                      </Link>
+                                  </div>
+                              </nav>
+                         )}
                          <div className="max-w-7xl mx-auto">
                              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
                                  <div>
@@ -357,11 +389,11 @@ export default function AdminDashboard() {
                                                 Apply filters to narrow down the book list.
                                             </SheetDescription>
                                             </SheetHeader>
-                                            <div className="grid gap-4 py-4">
-                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="filter-category" className="text-right">Category</Label>
+                                            <div className="space-y-4 py-4"> {/* Changed from grid */}
+                                                <div className="space-y-2"> {/* Changed from grid */}
+                                                    <Label htmlFor="filter-category">Category</Label> {/* Removed text-right */}
                                                     <Select value={tempCategory} onValueChange={setTempCategory} disabled={isLoadingCategories}>
-                                                        <SelectTrigger id="filter-category" className="col-span-3">
+                                                        <SelectTrigger id="filter-category" className="w-full"> {/* Changed from col-span-3 */}
                                                             <SelectValue placeholder="Select Category" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -370,10 +402,10 @@ export default function AdminDashboard() {
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="filter-status" className="text-right">Status</Label>
+                                                <div className="space-y-2"> {/* Changed from grid */}
+                                                    <Label htmlFor="filter-status">Status</Label> {/* Removed text-right */}
                                                     <Select value={tempStatus} onValueChange={(v) => setTempStatus(v as StatusOption)}>
-                                                        <SelectTrigger id="filter-status" className="col-span-3">
+                                                        <SelectTrigger id="filter-status" className="w-full"> {/* Changed from col-span-3 */}
                                                             <SelectValue placeholder="Select Status" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -383,10 +415,10 @@ export default function AdminDashboard() {
                                                         </SelectContent>
                                                     </Select>
                                                 </div>
-                                                <div className="grid grid-cols-4 items-center gap-4">
-                                                    <Label htmlFor="filter-featured" className="text-right">Featured</Label>
+                                                <div className="space-y-2"> {/* Changed from grid */}
+                                                    <Label htmlFor="filter-featured">Featured</Label> {/* Removed text-right */}
                                                      <Select value={tempFeatured} onValueChange={(v) => setTempFeatured(v as FeaturedOption)}>
-                                                        <SelectTrigger id="filter-featured" className="col-span-3">
+                                                        <SelectTrigger id="filter-featured" className="w-full"> {/* Changed from col-span-3 */}
                                                             <SelectValue placeholder="Select Featured Status" />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -397,7 +429,7 @@ export default function AdminDashboard() {
                                                     </Select>
                                                 </div>
                                             </div>
-                                            <SheetFooter>
+                                            <SheetFooter className="flex-col sm:flex-row sm:justify-end gap-2 pt-4"> {/* Adjusted className */}
                                                 <Button variant="outline" onClick={handleClearFilters}>Clear Filters</Button>
                                                 <SheetClose asChild>
                                                      <Button onClick={handleApplyFilters}>Apply Filters</Button>
@@ -496,7 +528,7 @@ export default function AdminDashboard() {
                                                     <TableCell className="text-right pr-2">
                                                          <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                                                <Button variant="ghost" size="sm" className="h-9 w-9 p-0"> {/* Increased size */}
                                                                     <span className="sr-only">Open menu</span>
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>

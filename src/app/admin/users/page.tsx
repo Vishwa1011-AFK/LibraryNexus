@@ -237,14 +237,15 @@ export default function AdminUsersPage() {
                                                         )}
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button variant="ghost" size="icon" onClick={() => handleEditUser(user.id)} aria-label="Edit User">
+                                                        <Button variant="ghost" size="sm" className="p-2" onClick={() => handleEditUser(user.id)} aria-label="Edit User"> {/* Changed to size="sm" for consistency */}
                                                             <Edit className="h-4 w-4" />
                                                         </Button>
                                                         <AlertDialog>
                                                             <AlertDialogTrigger asChild>
                                                                  <Button
                                                                     variant="ghost"
-                                                                    size="icon"
+                                                                    size="sm"
+                                                                    className="p-2 text-destructive hover:text-destructive"
                                                                     aria-label="Delete User"
                                                                     disabled={currentAdminUser?.id === user.id}
                                                                   >

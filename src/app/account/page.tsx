@@ -113,7 +113,7 @@ export default function AccountPage() {
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold">Personal Info</h2>
                                 <Link href="/account/edit">
-                                    <Button variant="ghost" size="icon">
+                                    <Button variant="ghost" size="sm" className="p-2"> 
                                         <Pencil className="h-5 w-5 text-primary" />
                                     </Button>
                                 </Link>

@@ -175,8 +175,8 @@ export default function WishlistPage() {
                                                 <TableCell className="hidden lg:table-cell">{formatDate(item.addedAt)}</TableCell>
                                                 <TableCell className="text-right">
                                                     <Button
-                                                        variant="ghost"
-                                                        size="icon"
+                                                        variant="ghost" 
+                                                        size="sm" 
                                                         onClick={() => handleRemoveFromWishlist(item.id, item.title)}
                                                         aria-label="Remove from wishlist"
                                                     >

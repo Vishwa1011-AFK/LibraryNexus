@@ -58,23 +58,23 @@ export default async function Home() {
 
             <div className="flex items-center justify-center perspective-[1500px]">
               {featuredBooks.length > 0 ? (
-                <div className="grid grid-cols-3 gap-3 relative w-full max-w-md lg:max-w-lg">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative w-full max-w-md lg:max-w-lg">
                   {featuredBooks.slice(0, 6).map((book, index) => {
                     const animationDelay = index * 100
-                    
-                    const rotationDegrees = index % 2 === 0 ? 
-                      Math.floor(Math.random() * 2) + 1 : 
+
+                    const rotationDegrees = index % 2 === 0 ?
+                      Math.floor(Math.random() * 2) + 1 :
                       -1 * (Math.floor(Math.random() * 2) + 1)
-                    
-                    const verticalOffset = index % 3 === 0 ? "mt-2" : 
-                                          index % 3 === 1 ? "mt-4" : 
+
+                    const verticalOffset = index % 3 === 0 ? "mt-2" :
+                                          index % 3 === 1 ? "mt-4" :
                                           "mt-0"
-                    
+
                     return (
-                      <div 
-                        key={book.id || index} 
+                      <div
+                        key={book.id || index}
                         className={`relative aspect-[2/3] rounded-lg overflow-hidden ${verticalOffset} animate-fade-in-up`}
-                        style={{ 
+                        style={{
                           animationDelay: `${animationDelay}ms`,
                           transform: `rotate(${rotationDegrees}deg)`,
                           zIndex: 10 - index
@@ -82,19 +82,19 @@ export default async function Home() {
                       >
                         <div className="w-full h-full relative group">
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"></div>
-                          
-                          <div className="relative w-full h-full rounded-lg overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.2)] group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.3)] transition-all duration-500 transform group-hover:translate-y-[-3px] group-hover:rotate-[0deg]" 
+
+                          <div className="relative w-full h-full rounded-lg overflow-hidden shadow-[0_5px_15px_rgba(0,0,0,0.2)] group-hover:shadow-[0_10px_25px_rgba(0,0,0,0.3)] transition-all duration-500 transform group-hover:translate-y-[-3px] group-hover:rotate-[0deg]"
                                style={{ transformStyle: 'preserve-3d' }}>
                             <Image
                               src={book.coverUrl || book.cover || "/placeholder.svg"}
                               alt={book.title || "Featured book"}
                               fill
-                              sizes="(max-width: 768px) 25vw, (max-width: 1200px) 12vw, 8vw"
+                              sizes="(max-width: 640px) 45vw, (max-width: 768px) 30vw, (max-width: 1200px) 12vw, 8vw"
                               className="object-cover"
                               priority={index < 3}
                             />
                           </div>
-                          
+
                           <div className="absolute bottom-0 left-0 right-0 p-2 text-white z-20 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
                             <p className="text-sm font-medium line-clamp-1">{book.title}</p>
                             <p className="text-xs opacity-80 line-clamp-1">{book.author}</p>
@@ -105,17 +105,17 @@ export default async function Home() {
                   })}
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-3 relative w-full max-w-md lg:max-w-lg">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 relative w-full max-w-md lg:max-w-lg">
                   {Array.from({ length: 6 }).map((_, index) => {
-                    const verticalOffset = index % 3 === 0 ? "mt-2" : 
-                                          index % 3 === 1 ? "mt-4" : 
+                    const verticalOffset = index % 3 === 0 ? "mt-2" :
+                                          index % 3 === 1 ? "mt-4" :
                                           "mt-0"
-                    
+
                     return (
                       <Skeleton
                         key={index}
                         className={`aspect-[2/3] rounded-lg ${verticalOffset}`}
-                        style={{ 
+                        style={{
                           transform: `rotate(${index % 2 === 0 ? 1 : -1}deg)`,
                           animationDelay: `${index * 100}ms`
                         }}

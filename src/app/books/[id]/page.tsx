@@ -179,7 +179,7 @@ export default function BookDetail() {
               )}
 
               <h2 className="text-xl font-semibold mb-4">Details</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-start space-x-2"> <Layers3 className="h-4 w-4 mt-0.5 text-primary flex-shrink-0"/> <span><span className="font-medium">Category:</span> {book.category || 'N/A'}</span></div>
                   <div className="flex items-start space-x-2"> <FileText className="h-4 w-4 mt-0.5 text-primary flex-shrink-0"/> <span><span className="font-medium">Pages:</span> {book.pages || 'N/A'}</span></div>
                   <div className="flex items-start space-x-2"> <Globe className="h-4 w-4 mt-0.5 text-primary flex-shrink-0"/> <span><span className="font-medium">Language:</span> {book.language || 'N/A'}</span></div>
