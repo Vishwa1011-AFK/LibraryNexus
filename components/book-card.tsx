@@ -49,10 +49,10 @@ export function BookCard({
               style={{ transition: "opacity 0.3s ease-in-out" }}
             />
           </div>
-          <h3 className="font-medium line-clamp-1 text-foreground" title={title}>
+          <h3 className="text-sm font-medium line-clamp-1 text-foreground md:text-base" title={title}>
             {title}
           </h3>
-          <p className="text-sm text-muted-foreground line-clamp-1" title={author}>
+          <p className="text-xs text-muted-foreground line-clamp-1 md:text-sm" title={author}>
             {author}
           </p>
         </CardContent>

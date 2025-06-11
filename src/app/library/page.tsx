@@ -66,8 +66,8 @@ const BookSection = ({ books, isLoading }: { books: Book[]; isLoading: boolean }
                     </CarouselItem>
                 ))}
             </CarouselContent>
-            <CarouselPrevious className="absolute left-[-10px] top-1/2 -translate-y-1/2 z-10 hidden sm:flex" />
-            <CarouselNext className="absolute right-[-10px] top-1/2 -translate-y-1/2 z-10 hidden sm:flex" />
+            <CarouselPrevious className="absolute left-[-10px] top-1/2 -translate-y-1/2 z-10" />
+            <CarouselNext className="absolute right-[-10px] top-1/2 -translate-y-1/2 z-10" />
         </Carousel>
     );
 };

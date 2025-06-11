@@ -173,7 +173,7 @@ export function BooksClientContent() {
                         className="pl-10"
                     />
                 </div>
-                 <div className="flex gap-4 w-full md:w-auto">
+                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
                      <Select value={category} onValueChange={handleCategoryChange}>
                          <SelectTrigger className="w-full md:w-[180px]">
                              <SelectValue placeholder="Category" />
